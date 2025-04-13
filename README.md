@@ -21,27 +21,27 @@ SOLID principles are included in this project where:
 - Dependency Inversion: (Can inject service into views for better decoupling.)
 -------------------------------------------------------------------------------
 Build & start containers
-`
-bash
-Copy
-Edit
-docker-compose up --build
-`
+- `
+    bash
+    Copy
+    Edit
+    docker-compose up --build
+    `
 Run migrations inside container
 
-`
-bash
-Copy
-Edit
-docker-compose exec web python manage.py migrate
-`
+- `
+    bash
+    Copy
+    Edit
+    docker-compose exec web python manage.py migrate
+    `
 Create a superuser (optional)
 
-`
-bash
-Copy
-Edit
-docker-compose exec web python manage.py createsuperuser
-`
+- `
+    bash
+    Copy
+    Edit
+    docker-compose exec web python manage.py createsuperuser
+    `
 Access the app
 Go to `http://localhost:8000`
