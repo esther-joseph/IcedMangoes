@@ -44,4 +44,6 @@ Create a superuser (optional)
     docker-compose exec web python manage.py createsuperuser
     `
 Access the app
-Go to `http://localhost:8000`
+
+- App: http://localhost:8000
+- Mongo Express UI: http://localhost:8081
