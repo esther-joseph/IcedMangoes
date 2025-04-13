@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>Artist Store</title></head>
+<body>
+    <h1>Available Artworks</h1>
+    <ul>
+        {% for art in artworks %}
+        <li>
+            <h2>{{ art.title }}</h2>
+            <img src="{{ art.image.url }}" width="200" />
+            <p>{{ art.description }}</p>
+            <p>Price: ${{ art.price }}</p>
+            <p>Artist: {{ art.artist.name }}</p>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
