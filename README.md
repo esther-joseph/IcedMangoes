@@ -1,49 +1,115 @@
 # IcedMangoes
-This is a creative storefront template to help starting artists who are new to starting a small business to help streamline their product and content in a more organized fashion using Python, Django, and MongoDB
 
-Install using `pip install django djongo pillow` and the configuration is as follows here:
+A backend architecture showcase demonstrating clean architecture, service-layer design, and production-oriented practices. Built with Django and MongoDB to model a storefront domain suitable for iterative schema evolution.
 
-`
-DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'artist_store_db',
-    }
-}
-`
+---
 
--------------------------------------------------------------------------------
-SOLID principles are included in this project where:
-- Single Responsibility: services.py handles logic; views render.
-- Open/Closed: Can extend ArtworkService without changing core.
-- Liskov Substitution: Could swap ArtworkService with subclass.
-- Interface Segregation: (If we had interfaces, we’d split service logic.)
-- Dependency Inversion: (Can inject service into views for better decoupling.)
--------------------------------------------------------------------------------
-Build & start containers
-- `
-    bash
-    Copy
-    Edit
-    docker-compose up --build
-    `
-Run migrations inside container
+## 1. Project Overview
 
-- `
-    bash
-    Copy
-    Edit
-    docker-compose exec web python manage.py migrate
-    `
-Create a superuser (optional)
+IcedMangoes implements a storefront API and presentation layer for an artist marketplace. The focus is on maintainable backend design: clear separation of concerns, testable business logic, and reproducible deployment. Views remain thin; domain logic lives in dedicated services.
 
-- `
-    bash
-    Copy
-    Edit
-    docker-compose exec web python manage.py createsuperuser
-    `
-Access the app
+---
 
-- App: http://localhost:8000
-- Mongo Express UI: http://localhost:8081
+## 2. Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Django 4.2+ |
+| Database | MongoDB (via Djongo) |
+| Media | Pillow for image handling |
+| Runtime | Python 3.11 |
+| Orchestration | Docker Compose |
+
+---
+
+## 3. Architectural Design
+
+### Service Layer Pattern
+
+Views delegate to a service layer instead of embedding business logic. `ArtworkService` encapsulates queries and filtering; views handle HTTP concerns only. This improves testability and keeps controllers focused on request/response handling.
+
+```
+Request -> View -> Service -> Model -> Database
+```
+
+### SOLID in Practice
+
+- **Single Responsibility**: `services.py` owns domain logic; `views.py` handles rendering and HTTP. Each module has one reason to change.
+- **Open/Closed**: `ArtworkService` can be extended via subclasses or composition without modifying existing code.
+- **Liskov Substitution**: A different implementation (e.g., cached, read-replica) can replace `ArtworkService` where it is injected.
+- **Interface Segregation**: Service interfaces are narrow and purpose-specific rather than monolithic.
+- **Dependency Inversion**: Views depend on the service abstraction; the concrete implementation can be injected for testing or swapping backends.
+
+---
+
+## 4. Containerized Development Environment
+
+Docker Compose provides environment parity across machines and CI. No "works on my machine" variance: the same images run locally and in pipeline contexts.
+
+- **web**: Django application (port 8000)
+- **mongodb**: MongoDB instance (port 27017)
+- **mongo-express**: Database UI for inspection (port 8081)
+
+Volumes persist data; `.env` holds credentials. The setup mirrors a minimal production topology.
+
+---
+
+## 5. Local Setup Instructions
+
+**Prerequisites**: Docker and Docker Compose installed.
+
+```bash
+docker-compose up --build
+```
+
+In a separate terminal:
+
+```bash
+docker-compose exec web python manage.py migrate
+docker-compose exec web python manage.py createsuperuser   # optional
+```
+
+**Endpoints**:
+
+- Application: http://localhost:8000
+- Mongo Express: http://localhost:8081
+
+---
+
+## 6. Engineering Decisions and Tradeoffs
+
+**MongoDB over PostgreSQL/SQLite**
+
+- Schema flexibility for early-stage product iteration; adding fields or nesting documents does not require migrations.
+- Faster prototyping when requirements are still evolving.
+- Tradeoff: Fewer relational guarantees and joins; eventual consistency model. Appropriate for read-heavy, document-centric domains like catalogs.
+
+**Djongo**
+
+- Bridges Django ORM with MongoDB for familiar query patterns and admin integration.
+- Tradeoff: Not every ORM feature maps cleanly to MongoDB; some queries may be less optimal than native aggregation pipelines.
+
+**Service layer instead of fat views**
+
+- Keeps views under 10 lines; logic is unit-testable without HTTP.
+- Tradeoff: Extra indirection for trivial use cases; justified as the domain grows.
+
+---
+
+## 7. Scalability and Future Improvements
+
+- **Caching**: Add Redis for `get_available_artworks` and other read-heavy endpoints.
+- **Async**: Migrate I/O-bound paths to async views and async DB drivers where beneficial.
+- **API-first**: Extract a REST or GraphQL API; keep templates as one consumer.
+- **Read replicas**: Route read traffic to replicas if write load increases.
+- **Background jobs**: Offload image processing and notifications to Celery or similar.
+
+---
+
+## 8. What This Project Demonstrates
+
+- **Clean architecture**: Layered design with explicit boundaries between HTTP, business logic, and data access.
+- **SOLID principles**: Applied concretely in service and view structure.
+- **Environment parity**: Containerized setup for reproducible development and deployment.
+- **Deliberate technology choices**: Documented tradeoffs for database and ORM selection.
+- **Production-minded practices**: Structure that supports testing, extension, and future scaling without major rewrites.
