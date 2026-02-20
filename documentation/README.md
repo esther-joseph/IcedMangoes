@@ -21,6 +21,7 @@ Central documentation hub for the IcedMangoes artist storefront project. Use thi
 | [Using the Storefront](using-the-storefront.md) | How to browse artworks, switch themes, add artworks via the modal |
 | [Admin Guide](admin-guide.md) | Django admin: artists, artworks, user management |
 | [Business Page](business-page.md) | Fulfillment configuration, provider integrations, webhooks (admin only) |
+| [Protecting Artwork from AI Training & Style Mimicry](ART_PROTECTION.md) | Glaze, WebGlaze, Nightshade — workflow to protect art before uploading |
 
 ### Tech Stack & Tools
 

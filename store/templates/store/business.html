@@ -6,6 +6,25 @@
         <h1 class="text-2xl font-bold mb-6" style="color: var(--theme-text);">Business</h1>
         <p class="text-sm mb-6" style="color: var(--theme-text-muted);">Configure fulfillment mode and provider integrations. Changes apply to new orders only.</p>
 
+        {# Protect Your Art — informational only, no processing in-app #}
+        <section class="rounded-xl p-6 mb-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-lg font-semibold mb-3" style="color: var(--theme-text);">Protect Your Art (Recommended)</h2>
+            <p class="text-sm mb-3" style="color: var(--theme-text-muted);">Preprocess images before uploading to reduce AI style mimicry and unauthorized training risk. Use third-party tools on your own device — this app does not process images.</p>
+            <ul class="text-sm mb-4 space-y-1" style="color: var(--theme-text);">
+                <li>1. Export web-sized images (e.g., 1600–2400px longest edge)</li>
+                <li>2. Apply Glaze or WebGlaze to protect style</li>
+                <li>3. Optionally apply Nightshade</li>
+                <li>4. Upload protected images to your store</li>
+                <li>5. Keep originals private for printing</li>
+            </ul>
+            <div class="flex flex-wrap gap-3">
+                <a href="https://glaze.cs.uchicago.edu/" target="_blank" rel="noopener noreferrer" class="text-sm px-3 py-2 rounded-lg" style="background: var(--theme-accent); color: white;">Glaze (Official)</a>
+                <a href="https://glaze.cs.uchicago.edu/webglaze.html" target="_blank" rel="noopener noreferrer" class="text-sm px-3 py-2 rounded-lg" style="background: var(--theme-accent); color: white;">WebGlaze (Official)</a>
+                <a href="https://nightshade.cs.uchicago.edu/" target="_blank" rel="noopener noreferrer" class="text-sm px-3 py-2 rounded-lg" style="background: var(--theme-accent); color: white;">Nightshade (Official)</a>
+                <a href="{% url 'protect_your_art' %}" class="text-sm px-3 py-2 rounded-lg border" style="border-color: var(--theme-border); color: var(--theme-text);">Read the full guide</a>
+            </div>
+        </section>
+
         {# Effective configuration summary #}
         <section class="rounded-xl p-4 mb-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
             <h2 class="text-sm font-semibold mb-2" style="color: var(--theme-text);">Effective configuration</h2>

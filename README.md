@@ -137,6 +137,8 @@ mutation {
 
 **Media Storage (Supabase)** — Render and similar platforms have ephemeral filesystems. For production, use [Supabase Storage](documentation/deploy-render.md#media-storage-supabase-storage) for artwork images. When `SUPABASE_*` env vars are set, uploads go to Supabase; otherwise they use local `media/`.
 
+**Protecting Artwork from AI Training & Style Mimicry** — Use [Glaze](https://glaze.cs.uchicago.edu/), [WebGlaze](https://glaze.cs.uchicago.edu/webglaze.html), or [Nightshade](https://nightshade.cs.uchicago.edu/) (University of Chicago SAND Lab) to preprocess images before uploading. See [documentation/ART_PROTECTION.md](documentation/ART_PROTECTION.md) for workflow and best practices.
+
 ---
 
 ## 6. Engineering Decisions and Tradeoffs
@@ -184,6 +186,18 @@ mutation {
 This project is provided "as is", without warranty of any kind. The author is not responsible for any damages, data loss, legal issues, or compliance violations resulting from the use or deployment of this software.
 
 Users are solely responsible for ensuring compliance with all applicable laws, including but not limited to data protection, e-commerce regulations, and payment processing requirements.
+
+---
+
+## Artist Storefront Checklist
+
+Before deploying your store:
+
+- [ ] Decide your protection workflow (Glaze / WebGlaze / Nightshade) — see [Protecting Artwork](documentation/ART_PROTECTION.md)
+- [ ] Keep original masters private; never upload them to the web
+- [ ] Upload web-optimized protected images only
+- [ ] Configure storage (Supabase / S3) and CDN if needed for production
+- [ ] Review privacy policy and terms if you deploy publicly
 
 ---
 

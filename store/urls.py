@@ -22,6 +22,7 @@ urlpatterns = [
     path("profile/substack/", views.profile_substack_post, name="profile_substack_post"),
     path("profile/send-email/", views.profile_send_email, name="profile_send_email"),
     path("business/", views.business, name="business"),
+    path("protect-your-art/", views.protect_your_art, name="protect_your_art"),
     path("business/settings/update/", views.business_settings_update, name="business_settings_update"),
     path("business/provider/<str:provider>/save-key/", views.business_provider_save_key, name="business_provider_save_key"),
     path("business/provider/<str:provider>/test/", views.business_provider_test, name="business_provider_test"),

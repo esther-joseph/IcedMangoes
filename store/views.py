@@ -401,6 +401,11 @@ def business(request: HttpRequest) -> HttpResponse:
     return render(request, "store/business.html", ctx)
 
 
+def protect_your_art(request: HttpRequest) -> HttpResponse:
+    """Informational page: Glaze/WebGlaze/Nightshade workflow. No processing; links to official resources."""
+    return render(request, "store/protect_your_art.html")
+
+
 @require_POST
 def business_settings_update(request: HttpRequest) -> HttpResponse:
     """Update fulfillment settings (admin only)."""

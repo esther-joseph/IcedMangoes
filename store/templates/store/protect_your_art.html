@@ -1,0 +1,44 @@
+{% extends "store/base.html" %}
+{% block title %}Protect Your Art – {{ site_settings.site_name|default:"Artist Store" }}{% endblock %}
+{% block content %}
+<div class="min-h-screen" style="background: var(--theme-bg);">
+    <div class="container mx-auto py-8 px-4 max-w-2xl">
+        <h1 class="text-2xl font-bold mb-4" style="color: var(--theme-text);">Protect Your Art (Glaze / WebGlaze / Nightshade)</h1>
+        <p class="text-sm mb-6" style="color: var(--theme-text-muted);">This app does not process images. Use these tools on your own device before uploading.</p>
+
+        <section class="space-y-4 mb-6">
+            <h2 class="text-lg font-semibold" style="color: var(--theme-text);">What These Tools Are</h2>
+            <ul class="text-sm space-y-2" style="color: var(--theme-text-muted);">
+                <li><strong style="color: var(--theme-text);">Glaze / WebGlaze</strong> — Adds subtle alterations to reduce AI style mimicry.</li>
+                <li><strong style="color: var(--theme-text);">Nightshade</strong> — Aims to discourage unauthorized training on scraped images.</li>
+            </ul>
+            <p class="text-xs" style="color: var(--theme-text-muted);">These are third-party tools from University of Chicago SAND Lab. Review their official docs and terms.</p>
+        </section>
+
+        <section class="space-y-2 mb-6">
+            <h2 class="text-lg font-semibold" style="color: var(--theme-text);">Recommended Workflow</h2>
+            <ol class="text-sm list-decimal list-inside space-y-1" style="color: var(--theme-text);">
+                <li>Keep originals in a private master folder</li>
+                <li>Create web-sized exports (1600–2400px longest edge)</li>
+                <li>Apply Glaze or WebGlaze to exports</li>
+                <li>Optionally apply Nightshade</li>
+                <li>Upload protected images to your store</li>
+                <li>Never replace originals; use them for prints only</li>
+            </ol>
+        </section>
+
+        <section class="space-y-3 mb-6">
+            <h2 class="text-lg font-semibold" style="color: var(--theme-text);">Official Resources</h2>
+            <div class="flex flex-wrap gap-3">
+                <a href="https://glaze.cs.uchicago.edu/" target="_blank" rel="noopener noreferrer" class="text-sm px-3 py-2 rounded-lg" style="background: var(--theme-accent); color: white;">Glaze (Desktop)</a>
+                <a href="https://glaze.cs.uchicago.edu/webglaze.html" target="_blank" rel="noopener noreferrer" class="text-sm px-3 py-2 rounded-lg" style="background: var(--theme-accent); color: white;">WebGlaze</a>
+                <a href="https://nightshade.cs.uchicago.edu/" target="_blank" rel="noopener noreferrer" class="text-sm px-3 py-2 rounded-lg" style="background: var(--theme-accent); color: white;">Nightshade</a>
+            </div>
+        </section>
+
+        <p class="text-xs mb-6" style="color: var(--theme-text-muted);">For the full guide including FAQ and disclaimers, see <strong>documentation/ART_PROTECTION.md</strong> in your project repository.</p>
+
+        <a href="{% url 'business' %}" class="text-sm" style="color: var(--theme-accent);">← Back to Business</a>
+    </div>
+</div>
+{% endblock %}
