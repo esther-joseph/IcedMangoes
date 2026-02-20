@@ -1,0 +1,246 @@
+{% load static %}
+{# Artwork detail modal - shown when user clicks an artwork #}
+<div id="artwork-detail-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+  <div class="fixed inset-0 bg-black/50" id="artwork-detail-backdrop"></div>
+  <div id="artwork-detail-overlay" class="fixed inset-0 flex items-center justify-center p-4">
+    <div class="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+      <div class="flex items-center justify-between p-4 border-b" style="border-color: var(--theme-border);">
+        <h2 id="artwork-modal-title" class="text-lg font-semibold" style="color: var(--theme-text);"></h2>
+        <button type="button" id="artwork-detail-close" class="p-1 rounded-full hover:opacity-70" aria-label="Close">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-4 space-y-4">
+        {# Image carousel - swipeable #}
+        <div id="artwork-modal-carousel" class="relative rounded-lg overflow-hidden touch-pan-y" style="background: var(--theme-border);">
+          <div id="artwork-carousel-track" class="flex transition-transform duration-300 ease-out" style="transform: translateX(0);">
+            {# Slides populated by JS #}
+          </div>
+          <button type="button" id="artwork-carousel-prev" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" style="background: rgba(0,0,0,0.4); color: white;" aria-label="Previous image">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <button type="button" id="artwork-carousel-next" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity" style="background: rgba(0,0,0,0.4); color: white;" aria-label="Next image">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <div id="artwork-carousel-dots" class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5"></div>
+          <p id="artwork-carousel-caption" class="absolute bottom-8 left-0 right-0 text-center text-xs font-medium px-4" style="color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.6);"></p>
+        </div>
+        <p id="artwork-modal-artist" class="text-sm" style="color: var(--theme-text-muted);"></p>
+        <p id="artwork-modal-description" class="text-sm" style="color: var(--theme-text);"></p>
+        <div>
+          <label for="artwork-modal-product-select" class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Product form</label>
+          <select id="artwork-modal-product-select" class="w-full px-4 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+            <option value="">Select an option</option>
+          </select>
+        </div>
+        <p id="artwork-modal-price" class="font-semibold" style="color: var(--theme-accent);"></p>
+        <a id="artwork-modal-add-cart" href="#" class="block w-full py-3 rounded-lg text-center font-medium text-sm" style="background: var(--theme-accent); color: white; pointer-events: none; opacity: 0.6;">Add to cart</a>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+#artwork-modal-carousel { min-height: 200px; position: relative; }
+#artwork-carousel-track { min-height: 200px; }
+#artwork-carousel-track .carousel-slide { flex: 0 0 100%; width: 100%; min-height: 200px; }
+#artwork-carousel-track .carousel-slide img { width: 100%; height: auto; max-height: 320px; object-fit: contain; display: block; }
+#artwork-carousel-dots .carousel-dot { width: 6px; height: 6px; border-radius: 50%; transition: opacity 0.2s; cursor: pointer; }
+#artwork-carousel-dots .carousel-dot.active { opacity: 1; transform: scale(1.2); }
+</style>
+<script>
+(function() {
+  var modal = document.getElementById('artwork-detail-modal');
+  var closeBtn = document.getElementById('artwork-detail-close');
+  var backdrop = document.getElementById('artwork-detail-backdrop');
+  var titleEl = document.getElementById('artwork-modal-title');
+  var trackEl = document.getElementById('artwork-carousel-track');
+  var dotsEl = document.getElementById('artwork-carousel-dots');
+  var captionEl = document.getElementById('artwork-carousel-caption');
+  var prevBtn = document.getElementById('artwork-carousel-prev');
+  var nextBtn = document.getElementById('artwork-carousel-next');
+  var artistEl = document.getElementById('artwork-modal-artist');
+  var descEl = document.getElementById('artwork-modal-description');
+  var selectEl = document.getElementById('artwork-modal-product-select');
+  var priceEl = document.getElementById('artwork-modal-price');
+  var addCartEl = document.getElementById('artwork-modal-add-cart');
+  var cartAddUrl = '{% url "cart_add" 0 %}'.replace('/0/', '/');
+  var currentArtworkId = null;
+  var carouselSlides = [];
+  var carouselIndex = 0;
+  var touchStartX = 0, touchEndX = 0;
+
+  function openModal() {
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function buildCarouselSlides(imageUrl, extraImages, products, title) {
+    var slides = [];
+    if (imageUrl) slides.push({ url: imageUrl, label: 'Artwork' });
+    (extraImages || []).forEach(function(s) { slides.push(s); });
+    (products || []).forEach(function(p) {
+      slides.push({ url: p.image || imageUrl, label: p.name || 'Product' });
+    });
+    return slides;
+  }
+
+  function populateCarousel(slides, title) {
+    carouselSlides = slides;
+    carouselIndex = 0;
+    trackEl.innerHTML = '';
+    dotsEl.innerHTML = '';
+    if (slides.length === 0) {
+      trackEl.innerHTML = '<div class="carousel-slide flex items-center justify-center" style="background: var(--theme-border);"><span style="color: var(--theme-text-muted);">No image</span></div>';
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+      return;
+    }
+    prevBtn.style.display = slides.length > 1 ? 'flex' : 'none';
+    nextBtn.style.display = slides.length > 1 ? 'flex' : 'none';
+    slides.forEach(function(s, i) {
+      var slide = document.createElement('div');
+      slide.className = 'carousel-slide';
+      slide.innerHTML = s.url
+        ? '<img src="' + s.url + '" alt="' + (s.label || title || '') + '">'
+        : '<div class="flex items-center justify-center w-full"><span style="color: var(--theme-text-muted);">No image</span></div>';
+      trackEl.appendChild(slide);
+      var dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      dot.style.background = i === 0 ? 'var(--theme-accent)' : 'rgba(255,255,255,0.6)';
+      dot.style.opacity = i === 0 ? '1' : '0.6';
+      dot.setAttribute('aria-label', 'Go to image ' + (i + 1));
+      dot.dataset.index = String(i);
+      dotsEl.appendChild(dot);
+    });
+    updateCarouselUI();
+  }
+
+  function goToSlide(index) {
+    if (carouselSlides.length === 0) return;
+    carouselIndex = Math.max(0, Math.min(index, carouselSlides.length - 1));
+    updateCarouselUI();
+  }
+
+  function updateCarouselUI() {
+    trackEl.style.transform = 'translateX(-' + (carouselIndex * 100) + '%)';
+    dotsEl.querySelectorAll('.carousel-dot').forEach(function(dot, i) {
+      dot.classList.toggle('active', i === carouselIndex);
+      dot.style.background = i === carouselIndex ? 'var(--theme-accent)' : 'rgba(255,255,255,0.6)';
+      dot.style.opacity = i === carouselIndex ? '1' : '0.6';
+    });
+    captionEl.textContent = carouselSlides[carouselIndex] ? carouselSlides[carouselIndex].label : '';
+    captionEl.style.display = carouselSlides[carouselIndex] && carouselSlides[carouselIndex].label ? 'block' : 'none';
+  }
+
+  function populateModal(card) {
+    var id = card.getAttribute('data-artwork-id');
+    var title = card.getAttribute('data-title') || '';
+    var desc = card.getAttribute('data-description') || '';
+    var artist = card.getAttribute('data-artist') || '';
+    var imageUrl = card.getAttribute('data-image-url') || '';
+    var basePrice = card.getAttribute('data-price') || '0';
+    var extraImages = [];
+    try {
+      var extraJson = card.getAttribute('data-extra-images') || '[]';
+      extraImages = JSON.parse(extraJson);
+    } catch (e) {}
+    var products = [];
+    try {
+      products = JSON.parse(card.getAttribute('data-products') || '[]');
+    } catch (e) {
+      products = [];
+    }
+    currentArtworkId = id;
+    titleEl.textContent = title;
+    artistEl.textContent = 'by ' + artist;
+    descEl.textContent = desc;
+    var slides = buildCarouselSlides(imageUrl, extraImages, products, title);
+    if (slides.length === 0) slides = buildCarouselSlides(null, [], [], title);
+    populateCarousel(slides, title);
+    selectEl.innerHTML = '<option value="">Select an option</option>';
+    if (products.length === 0) {
+      selectEl.innerHTML += '<option value="0">Standard — $' + basePrice + '</option>';
+    } else {
+      products.forEach(function(p) {
+        selectEl.innerHTML += '<option value="' + p.id + '">' + p.name + ' — $' + p.price + '</option>';
+      });
+    }
+    priceEl.textContent = '';
+    addCartEl.href = '#';
+    addCartEl.style.pointerEvents = 'none';
+    addCartEl.style.opacity = '0.6';
+  }
+
+  prevBtn.addEventListener('click', function() { goToSlide(carouselIndex - 1); });
+  nextBtn.addEventListener('click', function() { goToSlide(carouselIndex + 1); });
+  dotsEl.addEventListener('click', function(e) {
+    var dot = e.target.closest('.carousel-dot');
+    if (dot && dot.dataset.index != null) goToSlide(parseInt(dot.dataset.index, 10));
+  });
+  trackEl.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches ? e.changedTouches[0].screenX : e.clientX;
+  }, { passive: true });
+  trackEl.addEventListener('touchend', function(e) {
+    touchEndX = e.changedTouches ? e.changedTouches[0].screenX : e.clientX;
+    var diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goToSlide(carouselIndex + 1);
+      else goToSlide(carouselIndex - 1);
+    }
+  }, { passive: true });
+  trackEl.addEventListener('mousedown', function(e) { touchStartX = e.clientX; });
+  trackEl.addEventListener('mouseup', function(e) {
+    touchEndX = e.clientX;
+    var diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goToSlide(carouselIndex + 1);
+      else goToSlide(carouselIndex - 1);
+    }
+  });
+  selectEl.addEventListener('change', function() {
+    var val = this.value;
+    if (!val) {
+      priceEl.textContent = '';
+      addCartEl.href = '#';
+      addCartEl.style.pointerEvents = 'none';
+      addCartEl.style.opacity = '0.6';
+      return;
+    }
+    var opt = this.options[this.selectedIndex];
+    var priceText = opt.text.split(' — ')[1] || '';
+    priceEl.textContent = priceText ? 'Price: ' + priceText : '';
+    addCartEl.href = cartAddUrl + currentArtworkId + '/?product_id=' + val;
+    addCartEl.style.pointerEvents = '';
+    addCartEl.style.opacity = '1';
+  });
+
+  document.addEventListener('click', function(e) {
+    var card = e.target.closest('.artwork-card');
+    if (card) {
+      e.preventDefault();
+      populateModal(card);
+      openModal();
+    }
+  });
+
+  closeBtn && closeBtn.addEventListener('click', closeModal);
+  backdrop && backdrop.addEventListener('click', closeModal);
+  var detailOverlay = document.getElementById('artwork-detail-overlay');
+  detailOverlay && detailOverlay.addEventListener('click', function(e) {
+    if (e.target === detailOverlay) closeModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (!modal || modal.classList.contains('hidden')) return;
+    if (e.key === 'Escape') { closeModal(); return; }
+    if (e.key === 'ArrowLeft') goToSlide(carouselIndex - 1);
+    if (e.key === 'ArrowRight') goToSlide(carouselIndex + 1);
+  });
+})();
+</script>

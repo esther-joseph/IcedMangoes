@@ -53,36 +53,46 @@ def index(
 
 
 def add_artwork(request: HttpRequest) -> HttpResponse:
-    """Handle artwork creation via POST (admin only)."""
+    """Handle artwork creation via POST (admin only). Requires at least one image."""
     if not request.user.is_authenticated or not request.user.is_staff:
         return redirect("index")
     if request.method != "POST":
         return redirect("index")
-    form = ArtworkForm(request.POST, request.FILES)
-    if form.is_valid():
+    images = list(request.FILES.getlist("images"))
+    form = ArtworkForm(request.POST)
+    if form.is_valid() and images:
         ArtworkService.create_artwork(
             artist_name=form.cleaned_data["artist_name"],
             title=form.cleaned_data["title"],
             description=form.cleaned_data["description"],
             price=form.cleaned_data["price"],
-            image=form.cleaned_data["image"],
+            images=images,
             tags=form.cleaned_data.get("tags", "") or "",
+            product_options=form.cleaned_data.get("product_options", "") or "",
         )
     return redirect("index")
 
 
 def cart_add(request: HttpRequest, artwork_id: int) -> HttpResponse:
-    """Add artwork to cart."""
+    """Add artwork to cart. Optional product_id for variant (GET/POST)."""
     artwork = get_object_or_404(Artwork, id=artwork_id, available=True)
-    add_to_cart(request, artwork_id)
+    product_id = request.GET.get("product_id") or request.POST.get("product_id")
+    pid = int(product_id) if product_id and str(product_id).isdigit() else None
+    if pid:
+        from .models import ArtworkProduct
+        get_object_or_404(ArtworkProduct, pk=pid, artwork=artwork)
+    add_to_cart(request, artwork_id, product_id=pid)
     next_url = request.GET.get("next", "/")
     return redirect(next_url)
 
 
 def cart_remove(request: HttpRequest, artwork_id: int) -> HttpResponse:
-    """Remove artwork from cart."""
-    remove_from_cart(request, artwork_id)
-    return redirect("index")
+    """Remove cart line. Optional product_id (GET) for variant."""
+    product_id = request.GET.get("product_id")
+    pid = int(product_id) if product_id and str(product_id).isdigit() else None
+    remove_from_cart(request, artwork_id, product_id=pid)
+    next_url = request.GET.get("next", "index")
+    return redirect(next_url)
 
 
 def orders_list(request: HttpRequest) -> HttpResponse:
@@ -121,8 +131,11 @@ def checkout_create(request: HttpRequest) -> HttpResponse:
             payment_method="card",
             status="PAID",
         )
-        for artwork, qty in cart_items:
-            OrderItem.objects.create(order=order, artwork=artwork, quantity=qty, price=artwork.price)
+        for item in cart_items:
+            art = item["artwork"]
+            qty = item["quantity"]
+            price = item["unit_price"]
+            OrderItem.objects.create(order=order, artwork=art, quantity=qty, price=price)
         request_fulfillment(order)
         clear_cart(request)
         request.session["demo_checkout_key"] = cart_sig
@@ -143,15 +156,15 @@ def checkout_create(request: HttpRequest) -> HttpResponse:
             "price_data": {
                 "currency": "usd",
                 "product_data": {
-                    "name": a.title,
-                    "images": [request.build_absolute_uri(a.image.url)] if a.image else [],
-                    "metadata": {"artwork_id": str(a.id)},
+                    "name": (item["artwork"].title + (f" — {item['product_name']}" if item.get("product_name") else "")),
+                    "images": [request.build_absolute_uri(item["artwork"].image.url)] if item["artwork"].image else [],
+                    "metadata": {"artwork_id": str(item["artwork"].id)},
                 },
-                "unit_amount": int(a.price * 100),
+                "unit_amount": int(item["unit_price"] * 100),
             },
-            "quantity": qty,
+            "quantity": item["quantity"],
         }
-        for a, qty in cart_items
+        for item in cart_items
     ]
     session = stripe.checkout.Session.create(
         payment_method_types=["card"],

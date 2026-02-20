@@ -2,7 +2,7 @@
 {# Add Artwork modal - 3-step walkthrough with breadcrumbs #}
 <div id="add-artwork-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
   <div class="fixed inset-0 bg-black/50" id="add-artwork-backdrop"></div>
-  <div class="fixed inset-0 flex items-center justify-center p-4">
+  <div id="add-artwork-overlay" class="fixed inset-0 flex items-center justify-center p-4">
     <div
       class="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl"
       style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);"
@@ -29,18 +29,16 @@
       <form id="add-artwork-form" action="{% url 'add_artwork' %}" method="post" enctype="multipart/form-data" class="p-6">
         {% csrf_token %}
 
-        {# Step 1: Upload image #}
+        {# Step 1: Upload images (min 1) #}
         <div id="add-artwork-step-1" class="add-artwork-step space-y-4">
-          <div class="border-2 border-dashed rounded-xl p-8 text-center transition-colors" id="image-drop-zone" style="border-color: var(--theme-border);">
-            <input type="file" name="image" id="id_image" accept="image/*" required class="hidden">
-            <label for="id_image" class="cursor-pointer block">
+          <div class="border-2 border-dashed rounded-xl p-6 text-center transition-colors" id="image-drop-zone" style="border-color: var(--theme-border);">
+            <input type="file" name="images" id="id_images" accept="image/*" multiple class="hidden">
+            <label for="id_images" class="cursor-pointer block">
               <span class="text-4xl block mb-2" style="color: var(--theme-accent);">📷</span>
-              <span class="block font-medium" style="color: var(--theme-text);">Click or drag to upload</span>
-              <span class="block text-sm mt-1" style="color: var(--theme-text-muted);">PNG, JPG, GIF up to 5MB</span>
+              <span class="block font-medium" style="color: var(--theme-text);">Click or drag to add images</span>
+              <span class="block text-sm mt-1" style="color: var(--theme-text-muted);">Min 1 image required · PNG, JPG, GIF up to 5MB each</span>
             </label>
-            <div id="image-preview" class="mt-4 hidden">
-              <img id="image-preview-img" src="" alt="Preview" class="max-h-48 mx-auto rounded-lg object-contain">
-            </div>
+            <div id="image-preview-list" class="mt-4 flex flex-wrap gap-3 justify-center"></div>
           </div>
           <div class="text-xs space-y-1 pt-2" style="color: var(--theme-text-muted);">
             <p><strong>Image requirements:</strong></p>
@@ -80,6 +78,12 @@
             <input type="number" name="price" id="id_price" required step="0.01" min="0" value="0.00" placeholder="0.00"
               class="w-full px-4 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
           </div>
+          <div>
+            <label for="id_product_options" class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Product form options (optional)</label>
+            <textarea name="product_options" id="id_product_options" rows="3" placeholder="One per line: Name, Price&#10;e.g. Print 8x10, 25.00&#10;Canvas 16x20, 75.00"
+              class="w-full px-4 py-2 rounded-lg border text-sm resize-none" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);"></textarea>
+            <p class="text-xs mt-1" style="color: var(--theme-text-muted);">Add product variants (e.g. Print, Canvas) with prices. One per line: Name, Price</p>
+          </div>
         </div>
 
         {# Step 3: Review and post #}
@@ -91,6 +95,7 @@
             <p id="review-artist" class="text-sm" style="color: var(--theme-text-muted);"></p>
             <p id="review-description" class="text-sm mt-1 line-clamp-2" style="color: var(--theme-text);"></p>
             <p id="review-price" class="font-semibold mt-2" style="color: var(--theme-accent);"></p>
+            <p id="review-product-options" class="text-sm mt-1 hidden" style="color: var(--theme-text-muted);"></p>
           </div>
         </div>
 
@@ -116,11 +121,12 @@
   var nextBtn = document.getElementById('add-artwork-next');
   var submitBtn = document.getElementById('add-artwork-submit');
   var stepLabel = document.getElementById('add-artwork-step-label');
-  var imageInput = document.getElementById('id_image');
-  var imagePreview = document.getElementById('image-preview');
-  var imagePreviewImg = document.getElementById('image-preview-img');
-  var stepLabels = ['Upload image', 'Title & details', 'Review & post'];
+  var imageInput = document.getElementById('id_images');
+  var imagePreviewList = document.getElementById('image-preview-list');
+  var overlay = document.getElementById('add-artwork-overlay');
+  var stepLabels = ['Upload images', 'Title & details', 'Review & post'];
   var currentStep = 1;
+  var imageFiles = [];
 
   function showStep(n) {
     currentStep = n;
@@ -147,10 +153,58 @@
     modal.classList.add('hidden');
     modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
+    form.reset();
+    imageFiles = [];
+    imagePreviewList.innerHTML = '';
+    if (imageInput) {
+      var dt = new DataTransfer();
+      imageInput.files = dt.files;
+    }
+    showStep(1);
   }
 
   function validateStep1() {
-    return imageInput.files && imageInput.files.length > 0;
+    return imageFiles.length > 0;
+  }
+
+  function syncFileInputFromList(fileList) {
+    imageFiles = fileList.slice();
+    var dt = new DataTransfer();
+    for (var i = 0; i < fileList.length; i++) dt.items.add(fileList[i]);
+    if (imageInput) imageInput.files = dt.files;
+  }
+
+  function renderImagePreviews() {
+    imagePreviewList.innerHTML = '';
+    if (imageFiles.length === 0) return;
+    for (var i = 0; i < imageFiles.length; i++) {
+      (function(idx) {
+        var file = imageFiles[idx];
+        if (!file || !file.type.startsWith('image/')) return;
+        var wrap = document.createElement('div');
+        wrap.className = 'relative inline-block';
+        var img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.alt = 'Preview ' + (idx + 1);
+        img.className = 'max-h-24 w-24 object-cover rounded-lg border';
+        img.style.borderColor = 'var(--theme-border)';
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold';
+        btn.style.background = 'var(--theme-accent)'; btn.style.color = 'white'; btn.style.border = 'none'; btn.style.cursor = 'pointer';
+        btn.setAttribute('aria-label', 'Remove image');
+        btn.textContent = '×';
+        btn.onclick = function() {
+          var files = imageFiles.slice();
+          files.splice(idx, 1);
+          syncFileInputFromList(files);
+          renderImagePreviews();
+        };
+        wrap.appendChild(img);
+        wrap.appendChild(btn);
+        imagePreviewList.appendChild(wrap);
+      })(i);
+    }
   }
   function validateStep2() {
     var artist = document.getElementById('id_artist_name');
@@ -161,19 +215,39 @@
   }
 
   function updateReview() {
-    if (imageInput.files && imageInput.files[0]) {
-      var url = URL.createObjectURL(imageInput.files[0]);
-      document.getElementById('review-image').innerHTML = '<img src="' + url + '" alt="Preview" class="max-h-32 rounded object-cover">';
+    var reviewImg = document.getElementById('review-image');
+    if (imageFiles.length > 0) {
+      var html = '<div class="flex flex-wrap gap-2">';
+      for (var i = 0; i < Math.min(imageFiles.length, 5); i++) {
+        var url = URL.createObjectURL(imageFiles[i]);
+        html += '<img src="' + url + '" alt="Preview ' + (i + 1) + '" class="max-h-24 rounded object-cover">';
+      }
+      if (imageFiles.length > 5) html += '<span class="text-xs self-center" style="color: var(--theme-text-muted);">+' + (imageFiles.length - 5) + ' more</span>';
+      html += '</div>';
+      reviewImg.innerHTML = html;
+    } else {
+      reviewImg.innerHTML = '';
     }
     document.getElementById('review-title').textContent = document.getElementById('id_title').value || '(Untitled)';
     document.getElementById('review-artist').textContent = 'by ' + (document.getElementById('id_artist_name').value || 'Unknown');
     document.getElementById('review-description').textContent = document.getElementById('id_description').value || '';
     document.getElementById('review-price').textContent = '$' + (document.getElementById('id_price').value || '0.00');
+    var productOpts = document.getElementById('id_product_options');
+    var optsEl = document.getElementById('review-product-options');
+    if (productOpts && productOpts.value.trim()) {
+      optsEl.textContent = 'Product options: ' + productOpts.value.trim().replace(/\n/g, '; ');
+      optsEl.classList.remove('hidden');
+    } else {
+      optsEl.classList.add('hidden');
+    }
   }
 
   trigger && trigger.addEventListener('click', openModal);
   closeBtn && closeBtn.addEventListener('click', closeModal);
   backdrop && backdrop.addEventListener('click', closeModal);
+  overlay && overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeModal();
+  });
 
   backBtn && backBtn.addEventListener('click', function() {
     if (currentStep > 1) showStep(currentStep - 1);
@@ -181,7 +255,7 @@
 
   nextBtn && nextBtn.addEventListener('click', function() {
     if (currentStep === 1 && !validateStep1()) {
-      alert('Please upload an image first.');
+      alert('Please add at least one image.');
       return;
     }
     if (currentStep === 2 && !validateStep2()) {
@@ -203,24 +277,27 @@
     });
   });
 
-  function handleImageSelect(file) {
-    if (!file || !file.type.startsWith('image/')) return;
-    var dt = new DataTransfer();
-    dt.items.add(file);
-    imageInput.files = dt.files;
-    var r = new FileReader();
-    r.onload = function() { imagePreviewImg.src = r.result; imagePreview.classList.remove('hidden'); };
-    r.readAsDataURL(file);
+  function handleImageAdd(files) {
+    if (!files || files.length === 0) return;
+    var existing = imageFiles.slice();
+    for (var i = 0; i < files.length; i++) {
+      if (files[i].type && files[i].type.startsWith('image/')) existing.push(files[i]);
+    }
+    syncFileInputFromList(existing);
+    renderImagePreviews();
   }
   imageInput && imageInput.addEventListener('change', function() {
-    if (this.files && this.files[0]) handleImageSelect(this.files[0]);
-    else imagePreview.classList.add('hidden');
+    if (this.files && this.files.length > 0) handleImageAdd(Array.from(this.files));
   });
   var dropZone = document.getElementById('image-drop-zone');
   if (dropZone) {
     dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.style.borderColor = 'var(--theme-accent)'; });
     dropZone.addEventListener('dragleave', function() { dropZone.style.borderColor = ''; });
-    dropZone.addEventListener('drop', function(e) { e.preventDefault(); dropZone.style.borderColor = ''; if (e.dataTransfer.files[0]) handleImageSelect(e.dataTransfer.files[0]); });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.style.borderColor = '';
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) handleImageAdd(Array.from(e.dataTransfer.files));
+    });
   }
 
   document.addEventListener('keydown', function(e) {

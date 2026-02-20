@@ -19,12 +19,8 @@ class ArtworkEditForm(forms.Form):
 
 
 class ArtworkForm(forms.Form):
-    """Form for creating a new artwork."""
+    """Form for creating a new artwork. Images handled via request.FILES.getlist('images')."""
 
-    image = forms.ImageField(
-        required=True,
-        help_text="Upload an image of your artwork",
-    )
     title = forms.CharField(max_length=100, required=True)
     description = forms.CharField(widget=forms.Textarea, required=True)
     tags = forms.CharField(
@@ -38,5 +34,10 @@ class ArtworkForm(forms.Form):
         min_value=Decimal("0"),
         required=True,
         initial=Decimal("0.00"),
+    )
+    product_options = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3}),
+        help_text="One per line: Product form, Price (e.g. Print 8x10, 25.00)",
     )
     artist_name = forms.CharField(max_length=100, required=True)

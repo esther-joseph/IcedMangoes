@@ -23,6 +23,12 @@ def create_idempotency_key(user_id: str | int, cart_signature: str) -> str:
 
 def build_cart_signature(cart_items: list) -> str:
     """Build deterministic signature from cart items for idempotency."""
+    if cart_items and isinstance(cart_items[0], dict):
+        parts = sorted(
+            (item["artwork"].id, item.get("product_id") or 0, item["quantity"])
+            for item in cart_items
+        )
+        return "|".join(f"{a}:{p}:{q}" for a, p, q in parts)
     parts = sorted((a.id, qty) for a, qty in cart_items)
     return "|".join(f"{aid}:{q}" for aid, q in parts)
 

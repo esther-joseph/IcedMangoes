@@ -10,18 +10,18 @@
   <div id="cart-dropdown" class="absolute left-full ml-2 top-0 w-80 rounded-xl shadow-xl py-3 hidden z-30" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
     {% if cart_items %}
       <div class="max-h-64 overflow-y-auto px-4">
-        {% for art, qty in cart_items %}
+        {% for item in cart_items %}
         <div class="flex gap-3 py-2 border-b last:border-b-0" style="border-color: var(--theme-border);">
-          {% if art.image %}
-            <img src="{{ art.image.url }}" alt="{{ art.title }}" class="w-12 h-12 rounded object-cover shrink-0">
+          {% if item.artwork.image %}
+            <img src="{{ item.artwork.image.url }}" alt="{{ item.artwork.title }}" class="w-12 h-12 rounded object-cover shrink-0">
           {% else %}
             <div class="w-12 h-12 rounded shrink-0 flex items-center justify-center text-xs" style="background: var(--theme-border); color: var(--theme-text-muted);">—</div>
           {% endif %}
           <div class="flex-1 min-w-0">
-            <p class="font-medium text-sm truncate" style="color: var(--theme-text);">{{ art.title }}</p>
-            <p class="text-xs" style="color: var(--theme-text-muted);">${{ art.price }} × {{ qty }}</p>
+            <p class="font-medium text-sm truncate" style="color: var(--theme-text);">{{ item.artwork.title }}{% if item.product_name %} — {{ item.product_name }}{% endif %}</p>
+            <p class="text-xs" style="color: var(--theme-text-muted);">${{ item.unit_price }} × {{ item.quantity }}</p>
           </div>
-          <a href="{% url 'cart_remove' art.id %}" class="text-xs hover:opacity-70" style="color: var(--theme-text-muted);">Remove</a>
+          <a href="{% url 'cart_remove' item.artwork.id %}{% if item.product_id %}?product_id={{ item.product_id }}{% endif %}" class="text-xs hover:opacity-70" style="color: var(--theme-text-muted);">Remove</a>
         </div>
         {% endfor %}
       </div>

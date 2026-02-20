@@ -14,6 +14,53 @@ Contributions, issues, and pull requests are welcome.
 
 ---
 
+## Artist-Friendly Deployment (Recommended): Vercel + Supabase
+
+The `/frontend` directory contains a **Next.js (App Router) + Supabase** storefront designed for artists who want to deploy quickly without Docker.
+
+- **Deploy to Vercel** in a few clicks
+- **Supabase** provides database + storage (single provider)
+- **Stripe** will be added in Phase 2
+- No Docker required
+
+### Quick start (local)
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local
+# Edit .env.local with your Supabase URL and anon key
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon (public) key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only; for admin operations |
+| `ADMIN_EMAILS` | Comma-separated emails for /business (Phase 3) |
+
+### Supabase setup
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. Run the schema: copy `frontend/supabase/migrations/001_initial_schema.sql` into SQL Editor and execute
+3. Create a **Storage bucket** named `media` (public) for product images
+4. See [frontend/docs/SUPABASE_SCHEMA.md](frontend/docs/SUPABASE_SCHEMA.md) for details
+
+### Vercel deployment
+
+1. Push to GitHub
+2. Import the repo in Vercel
+3. Set the **Root Directory** to `frontend`
+4. Add the environment variables above
+5. Deploy
+
+---
+
 ## 1. Project Overview
 
 IcedMangoes implements a storefront API and presentation layer for an artist marketplace. The focus is on maintainable backend design: clear separation of concerns, testable business logic, and reproducible deployment. Views remain thin; domain logic lives in dedicated services.

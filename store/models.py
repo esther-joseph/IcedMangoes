@@ -40,6 +40,34 @@ class Artwork(models.Model):
         return self.title
 
 
+class ArtworkImage(models.Model):
+    """Extra image for an artwork (for carousel, multiple views)."""
+
+    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="artworks/")
+    order = models.PositiveIntegerField(default=0, help_text="Display order")
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.artwork.title} — image {self.order}"
+
+
+class ArtworkProduct(models.Model):
+    """Product form option for an artwork (e.g. Print 8x10, Canvas 16x20) with its price."""
+
+    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self) -> str:
+        return f"{self.artwork.title} — {self.name} (${self.price})"
+
+
 class Order(models.Model):
     """Order placed by a user."""
 
