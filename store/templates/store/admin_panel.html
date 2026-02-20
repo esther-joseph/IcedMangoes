@@ -1,0 +1,53 @@
+{% extends "store/base.html" %}
+{% block title %}Admin Panel – {{ site_settings.site_name|default:"Artist Store" }}{% endblock %}
+{% block content %}
+<div class="min-h-screen" style="background: var(--theme-bg);">
+    <header class="sticky top-0 z-10 backdrop-blur border-b" style="background: var(--theme-bg-header); border-color: var(--theme-border);">
+        <div class="container mx-auto px-4 py-4">
+            {% include "store/components/nav_bar.html" %}
+        </div>
+    </header>
+    <main class="container mx-auto py-8 px-4 max-w-4xl">
+        <h1 class="text-2xl font-bold mb-6" style="color: var(--theme-text);">Admin Panel</h1>
+
+        {# Theme & creative customization #}
+        <section class="rounded-xl p-6 mb-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Theme & Branding</h2>
+            <form method="post" action="{% url 'admin_theme_update' %}" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Site name</label>
+                    <input type="text" name="site_name" value="{{ site_settings.site_name }}" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Tagline</label>
+                    <input type="text" name="tagline" value="{{ site_settings.tagline }}" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Default theme</label>
+                    <select name="default_theme" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+                        <option value="cute-beige" {% if site_settings.default_theme == "cute-beige" %}selected{% endif %}>Cute Beige</option>
+                        <option value="lavender" {% if site_settings.default_theme == "lavender" %}selected{% endif %}>Lavender</option>
+                        <option value="baby-blue" {% if site_settings.default_theme == "baby-blue" %}selected{% endif %}>Baby Blue</option>
+                        <option value="peach-pink" {% if site_settings.default_theme == "peach-pink" %}selected{% endif %}>Peach Pink</option>
+                        <option value="slate-gray" {% if site_settings.default_theme == "slate-gray" %}selected{% endif %}>Slate Gray</option>
+                        <option value="mint-green" {% if site_settings.default_theme == "mint-green" %}selected{% endif %}>Mint Green</option>
+                        <option value="coral-red" {% if site_settings.default_theme == "coral-red" %}selected{% endif %}>Coral Red</option>
+                    </select>
+                </div>
+                <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-accent); color: white;">Save</button>
+            </form>
+        </section>
+
+        {# Stripe integration #}
+        {% include "store/components/admin_stripe_integration.html" %}
+
+        {# Artwork gallery management #}
+        <section class="rounded-xl p-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Artworks</h2>
+            <p class="text-sm mb-4" style="color: var(--theme-text-muted);">Add artworks from the gallery (+ button). Update or delete below.</p>
+            {% include "store/components/admin_artwork_list.html" with artworks=artworks %}
+        </section>
+    </main>
+</div>
+{% endblock %}

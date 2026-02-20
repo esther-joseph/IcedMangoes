@@ -1,0 +1,74 @@
+{% extends "store/base.html" %}
+{% block title %}Past Orders – {{ site_settings.site_name|default:"Artist Store" }}{% endblock %}
+{% block content %}
+<div class="min-h-screen" style="background: var(--theme-bg);">
+    <header class="sticky top-0 z-10 backdrop-blur border-b" style="background: var(--theme-bg-header); border-color: var(--theme-border);">
+        <div class="container mx-auto px-4 py-4">
+            {% include "store/components/nav_bar.html" %}
+        </div>
+    </header>
+    <main class="container mx-auto py-8 px-4">
+        <h1 class="text-2xl font-bold mb-6" style="color: var(--theme-text);">Past Orders</h1>
+        {% if orders %}
+            <div class="space-y-3">
+                {% for order in orders %}
+                <div class="rounded-xl overflow-hidden" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+                    <button type="button" class="order-accordion-toggle w-full flex items-center gap-4 p-4 text-left hover:opacity-90 transition-opacity" data-order-id="{{ order.id }}" aria-expanded="false">
+                        {% with first_item=order.orderitem_set.first %}
+                        {% if first_item.artwork.image %}
+                            <img src="{{ first_item.artwork.image.url }}" alt="" class="w-16 h-16 rounded-lg object-cover shrink-0">
+                        {% else %}
+                            <div class="w-16 h-16 rounded-lg shrink-0 flex items-center justify-center text-xs" style="background: var(--theme-border); color: var(--theme-text-muted);">—</div>
+                        {% endif %}
+                        {% endwith %}
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold" style="color: var(--theme-text);">Order #{{ order.id }}</p>
+                            <p class="text-sm" style="color: var(--theme-text-muted);">{{ order.created_at|date:"M d, Y" }}</p>
+                        </div>
+                        <svg class="w-5 h-5 transition-transform order-chevron shrink-0" style="color: var(--theme-text-muted);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="order-accordion-content hidden px-4 pb-4" data-order-id="{{ order.id }}">
+                        <div class="pt-2 border-t space-y-3" style="border-color: var(--theme-border);">
+                            <p class="text-sm" style="color: var(--theme-text-muted);">Date: {{ order.created_at|date:"F d, Y g:i A" }}</p>
+                            <p class="text-sm" style="color: var(--theme-text-muted);">Payment: {{ order.payment_method|default:"card" }}</p>
+                            <p class="text-sm font-medium" style="color: var(--theme-text);">Items:</p>
+                            {% for item in order.orderitem_set.all %}
+                            <div class="flex gap-3 py-2">
+                                {% if item.artwork.image %}
+                                    <img src="{{ item.artwork.image.url }}" alt="{{ item.artwork.title }}" class="w-12 h-12 rounded object-cover shrink-0">
+                                {% else %}
+                                    <div class="w-12 h-12 rounded shrink-0 flex items-center justify-center text-xs" style="background: var(--theme-border);">—</div>
+                                {% endif %}
+                                <div>
+                                    <p class="font-medium text-sm" style="color: var(--theme-text);">{{ item.artwork.title }}</p>
+                                    <p class="text-xs" style="color: var(--theme-text-muted);">${{ item.price }} × {{ item.quantity }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <p class="font-semibold pt-2" style="color: var(--theme-accent);">Total: ${{ order.total }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center py-12" style="color: var(--theme-text-muted);">No orders yet.</p>
+        {% endif %}
+    </main>
+</div>
+<script>
+(function() {
+  document.querySelectorAll('.order-accordion-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = btn.dataset.orderId;
+      var content = document.querySelector('.order-accordion-content[data-order-id="' + id + '"]');
+      var chevron = btn.querySelector('.order-chevron');
+      var isOpen = content && !content.classList.contains('hidden');
+      if (content) content.classList.toggle('hidden', isOpen);
+      if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+      btn.setAttribute('aria-expanded', !isOpen);
+    });
+  });
+})();
+</script>
+{% endblock %}

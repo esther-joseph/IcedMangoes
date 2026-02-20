@@ -22,8 +22,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "graphene_django",
     "store",
 ]
+
+# GraphQL
+GRAPHENE = {
+    "SCHEMA": "config.schema.schema",
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -52,31 +58,40 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "django.template.context_processors.media",
+                "store.context_processors.store_context",
             ],
         },
     },
 ]
 
-# Database
-_mongo_host = os.environ.get("MONGO_HOST", "mongodb")
-_mongo_port = os.environ.get("MONGO_PORT", "27017")
-_mongo_user = os.environ.get("MONGO_USERNAME", "")
-_mongo_pass = os.environ.get("MONGO_PASSWORD", "")
-_mongo_name = os.environ.get("MONGO_INITDB_DATABASE", "artist_store_db")
+# Database - SQLite for local dev without Docker, MongoDB when available
+_use_sqlite = os.environ.get("USE_SQLITE", "").lower() in ("true", "1", "yes")
 
-_auth = ""
-if _mongo_user and _mongo_pass:
-    _auth = f"{_mongo_user}:{_mongo_pass}@"
-_mongo_uri = f"mongodb://{_auth}{_mongo_host}:{_mongo_port}"
-
-DATABASES = {
-    "default": {
-        "ENGINE": "djongo",
-        "NAME": _mongo_name,
-        "ENFORCE_SCHEMA": False,
-        "CLIENT": {"host": _mongo_uri},
+if _use_sqlite:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    _mongo_host = os.environ.get("MONGO_HOST", "mongodb")
+    _mongo_port = os.environ.get("MONGO_PORT", "27017")
+    _mongo_user = os.environ.get("MONGO_USERNAME", "")
+    _mongo_pass = os.environ.get("MONGO_PASSWORD", "")
+    _mongo_name = os.environ.get("MONGO_INITDB_DATABASE", "artist_store_db")
+    _auth = ""
+    if _mongo_user and _mongo_pass:
+        _auth = f"{_mongo_user}:{_mongo_pass}@"
+    _mongo_uri = f"mongodb://{_auth}{_mongo_host}:{_mongo_port}"
+    DATABASES = {
+        "default": {
+            "ENGINE": "djongo",
+            "NAME": _mongo_name,
+            "ENFORCE_SCHEMA": False,
+            "CLIENT": {"host": _mongo_uri},
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -97,3 +112,19 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Auth
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
+# Stripe
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
+# Email
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@localhost")
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
+)

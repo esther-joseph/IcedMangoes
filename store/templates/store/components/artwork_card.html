@@ -1,0 +1,30 @@
+{% load static %}
+{# Artwork card component - Pinterest-style pin #}
+{# Usage: {% include "store/components/artwork_card.html" with art=artwork %} #}
+<article class="group break-inside-avoid mb-4 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300" style="background: var(--theme-bg-card); box-shadow: 0 4px 6px -1px var(--theme-shadow), 0 2px 4px -2px var(--theme-shadow);">
+    <div class="block">
+        {% if art.image %}
+            <div class="relative overflow-hidden">
+                <img
+                    src="{{ art.image.url }}"
+                    alt="{{ art.title }}"
+                    class="w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                >
+            </div>
+        {% else %}
+            <div class="aspect-square flex items-center justify-center" style="background: var(--theme-border);">
+                <span class="text-sm" style="color: var(--theme-text-muted);">No image</span>
+            </div>
+        {% endif %}
+        <div class="p-4">
+            <h3 class="font-semibold line-clamp-2" style="color: var(--theme-text);">{{ art.title }}</h3>
+            <p class="mt-1 text-sm" style="color: var(--theme-text-muted);">{{ art.artist.name }}</p>
+            <p class="mt-2 text-sm line-clamp-2" style="color: var(--theme-text); opacity: 0.9;">{{ art.description }}</p>
+            {% if art.tags %}<p class="mt-1 text-xs" style="color: var(--theme-text-muted);">{{ art.tags }}</p>{% endif %}
+            <div class="mt-2 flex items-center justify-between gap-2">
+                <span class="font-semibold" style="color: var(--theme-accent);">${{ art.price }}</span>
+                <a href="{% url 'cart_add' art.id %}?next={{ request.path }}" class="text-xs px-2 py-1 rounded shrink-0" style="background: var(--theme-accent); color: white;">Add to cart</a>
+            </div>
+        </div>
+    </div>
+</article>

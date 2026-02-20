@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Artist Store{% endblock %}</title>
+    {% load static %}
+    <link href="{% static 'store/css/themes.css' %}" rel="stylesheet">
+    <link href="{% static 'store/css/output.css' %}" rel="stylesheet">
+</head>
+<body class="min-h-screen" style="background: var(--theme-bg, #f5f0e8); color: var(--theme-text, #3d3730);">
+    {% block content %}{% endblock %}
+    <script>
+      (function() {
+        var saved = localStorage.getItem('artist-store-theme');
+        var defaultTheme = '{{ site_settings.default_theme|default:"cute-beige" }}';
+        document.documentElement.setAttribute('data-theme', saved || defaultTheme);
+      })();
+    </script>
+</body>
+</html>

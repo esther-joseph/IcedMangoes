@@ -1,0 +1,230 @@
+{% load static %}
+{# Add Artwork modal - 3-step walkthrough with breadcrumbs #}
+<div id="add-artwork-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+  <div class="fixed inset-0 bg-black/50" id="add-artwork-backdrop"></div>
+  <div class="fixed inset-0 flex items-center justify-center p-4">
+    <div
+      class="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl"
+      style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);"
+    >
+      {# Header with breadcrumbs #}
+      <div class="sticky top-0 z-10 px-6 py-4 border-b" style="background: var(--theme-bg-card); border-color: var(--theme-border);">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold" style="color: var(--theme-text);">Add Artwork</h2>
+          <button type="button" id="add-artwork-close" class="p-1 rounded-full hover:opacity-70 transition-opacity" style="color: var(--theme-text-muted);" aria-label="Close">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        {# Breadcrumbs #}
+        <nav class="flex gap-2 mt-3" aria-label="Steps">
+          <button type="button" class="add-artwork-step-dot w-3 h-3 rounded-full transition-all" data-step="1" aria-current="step" style="background: var(--theme-accent);"></button>
+          <span class="text-xs self-center" style="color: var(--theme-border);">—</span>
+          <button type="button" class="add-artwork-step-dot w-3 h-3 rounded-full transition-all opacity-40" data-step="2" style="background: var(--theme-accent);"></button>
+          <span class="text-xs self-center" style="color: var(--theme-border);">—</span>
+          <button type="button" class="add-artwork-step-dot w-3 h-3 rounded-full transition-all opacity-40" data-step="3" style="background: var(--theme-accent);"></button>
+          <span class="ml-2 text-xs" style="color: var(--theme-text-muted);"><span id="add-artwork-step-label">Upload image</span></span>
+        </nav>
+      </div>
+
+      <form id="add-artwork-form" action="{% url 'add_artwork' %}" method="post" enctype="multipart/form-data" class="p-6">
+        {% csrf_token %}
+
+        {# Step 1: Upload image #}
+        <div id="add-artwork-step-1" class="add-artwork-step space-y-4">
+          <div class="border-2 border-dashed rounded-xl p-8 text-center transition-colors" id="image-drop-zone" style="border-color: var(--theme-border);">
+            <input type="file" name="image" id="id_image" accept="image/*" required class="hidden">
+            <label for="id_image" class="cursor-pointer block">
+              <span class="text-4xl block mb-2" style="color: var(--theme-accent);">📷</span>
+              <span class="block font-medium" style="color: var(--theme-text);">Click or drag to upload</span>
+              <span class="block text-sm mt-1" style="color: var(--theme-text-muted);">PNG, JPG, GIF up to 5MB</span>
+            </label>
+            <div id="image-preview" class="mt-4 hidden">
+              <img id="image-preview-img" src="" alt="Preview" class="max-h-48 mx-auto rounded-lg object-contain">
+            </div>
+          </div>
+          <div class="text-xs space-y-1 pt-2" style="color: var(--theme-text-muted);">
+            <p><strong>Image requirements:</strong></p>
+            <ul class="list-disc list-inside space-y-0.5">
+              <li>Formats: PNG, JPG, JPEG, GIF</li>
+              <li>Max file size: 5 MB</li>
+              <li>Recommended: 1200×1200 px or larger</li>
+              <li>Aspect ratio: Any (square works best for grid)</li>
+            </ul>
+          </div>
+        </div>
+
+        {# Step 2: Title, description, tags, price #}
+        <div id="add-artwork-step-2" class="add-artwork-step hidden space-y-4">
+          <div>
+            <label for="id_artist_name" class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Artist name</label>
+            <input type="text" name="artist_name" id="id_artist_name" required maxlength="100" placeholder="Your name or studio"
+              class="w-full px-4 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+          </div>
+          <div>
+            <label for="id_title" class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Title</label>
+            <input type="text" name="title" id="id_title" required maxlength="100" placeholder="Artwork title"
+              class="w-full px-4 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+          </div>
+          <div>
+            <label for="id_description" class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Description</label>
+            <textarea name="description" id="id_description" required rows="3" placeholder="Describe your artwork..."
+              class="w-full px-4 py-2 rounded-lg border text-sm resize-none" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);"></textarea>
+          </div>
+          <div>
+            <label for="id_tags" class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Tags</label>
+            <input type="text" name="tags" id="id_tags" maxlength="500" placeholder="abstract, oil, landscape"
+              class="w-full px-4 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+          </div>
+          <div>
+            <label for="id_price" class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Price ($)</label>
+            <input type="number" name="price" id="id_price" required step="0.01" min="0" value="0.00" placeholder="0.00"
+              class="w-full px-4 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+          </div>
+        </div>
+
+        {# Step 3: Review and post #}
+        <div id="add-artwork-step-3" class="add-artwork-step hidden space-y-4">
+          <p class="text-sm" style="color: var(--theme-text-muted);">Review your artwork and click Post to add it to the gallery.</p>
+          <div id="add-artwork-review" class="rounded-lg p-4" style="background: var(--theme-bg); border: 1px solid var(--theme-border);">
+            <div id="review-image" class="mb-3"></div>
+            <p id="review-title" class="font-semibold" style="color: var(--theme-text);"></p>
+            <p id="review-artist" class="text-sm" style="color: var(--theme-text-muted);"></p>
+            <p id="review-description" class="text-sm mt-1 line-clamp-2" style="color: var(--theme-text);"></p>
+            <p id="review-price" class="font-semibold mt-2" style="color: var(--theme-accent);"></p>
+          </div>
+        </div>
+
+        {# Navigation buttons #}
+        <div class="flex justify-between gap-4 mt-6 pt-4 border-t" style="border-color: var(--theme-border);">
+          <button type="button" id="add-artwork-back" class="px-4 py-2 rounded-lg text-sm font-medium hidden" style="background: var(--theme-border); color: var(--theme-text);">Back</button>
+          <div class="flex-1"></div>
+          <button type="button" id="add-artwork-next" class="px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-accent); color: white;">Next</button>
+          <button type="submit" id="add-artwork-submit" class="px-4 py-2 rounded-lg text-sm font-medium hidden" style="background: var(--theme-accent); color: white;">Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+(function() {
+  var modal = document.getElementById('add-artwork-modal');
+  var trigger = document.getElementById('add-artwork-trigger');
+  var closeBtn = document.getElementById('add-artwork-close');
+  var backdrop = document.getElementById('add-artwork-backdrop');
+  var form = document.getElementById('add-artwork-form');
+  var backBtn = document.getElementById('add-artwork-back');
+  var nextBtn = document.getElementById('add-artwork-next');
+  var submitBtn = document.getElementById('add-artwork-submit');
+  var stepLabel = document.getElementById('add-artwork-step-label');
+  var imageInput = document.getElementById('id_image');
+  var imagePreview = document.getElementById('image-preview');
+  var imagePreviewImg = document.getElementById('image-preview-img');
+  var stepLabels = ['Upload image', 'Title & details', 'Review & post'];
+  var currentStep = 1;
+
+  function showStep(n) {
+    currentStep = n;
+    document.querySelectorAll('.add-artwork-step').forEach(function(el, i) {
+      el.classList.toggle('hidden', i + 1 !== n);
+    });
+    document.querySelectorAll('.add-artwork-step-dot').forEach(function(el, i) {
+      el.classList.toggle('opacity-40', i + 1 !== n);
+      el.setAttribute('aria-current', i + 1 === n ? 'step' : null);
+    });
+    stepLabel.textContent = stepLabels[n - 1];
+    backBtn.classList.toggle('hidden', n === 1);
+    nextBtn.classList.toggle('hidden', n === 3);
+    submitBtn.classList.toggle('hidden', n !== 3);
+  }
+
+  function openModal() {
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    showStep(1);
+  }
+  function closeModal() {
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function validateStep1() {
+    return imageInput.files && imageInput.files.length > 0;
+  }
+  function validateStep2() {
+    var artist = document.getElementById('id_artist_name');
+    var title = document.getElementById('id_title');
+    var desc = document.getElementById('id_description');
+    var price = document.getElementById('id_price');
+    return artist.value.trim() && title.value.trim() && desc.value.trim() && price.value && parseFloat(price.value) >= 0;
+  }
+
+  function updateReview() {
+    if (imageInput.files && imageInput.files[0]) {
+      var url = URL.createObjectURL(imageInput.files[0]);
+      document.getElementById('review-image').innerHTML = '<img src="' + url + '" alt="Preview" class="max-h-32 rounded object-cover">';
+    }
+    document.getElementById('review-title').textContent = document.getElementById('id_title').value || '(Untitled)';
+    document.getElementById('review-artist').textContent = 'by ' + (document.getElementById('id_artist_name').value || 'Unknown');
+    document.getElementById('review-description').textContent = document.getElementById('id_description').value || '';
+    document.getElementById('review-price').textContent = '$' + (document.getElementById('id_price').value || '0.00');
+  }
+
+  trigger && trigger.addEventListener('click', openModal);
+  closeBtn && closeBtn.addEventListener('click', closeModal);
+  backdrop && backdrop.addEventListener('click', closeModal);
+
+  backBtn && backBtn.addEventListener('click', function() {
+    if (currentStep > 1) showStep(currentStep - 1);
+  });
+
+  nextBtn && nextBtn.addEventListener('click', function() {
+    if (currentStep === 1 && !validateStep1()) {
+      alert('Please upload an image first.');
+      return;
+    }
+    if (currentStep === 2 && !validateStep2()) {
+      alert('Please fill in artist name, title, description, and price.');
+      return;
+    }
+    if (currentStep === 3) return;
+    if (currentStep === 2) updateReview();
+    showStep(currentStep + 1);
+  });
+
+  document.querySelectorAll('.add-artwork-step-dot').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var s = parseInt(btn.dataset.step, 10);
+      if (s === 1 || (s === 2 && validateStep1()) || (s === 3 && validateStep1() && validateStep2())) {
+        if (s === 3) updateReview();
+        showStep(s);
+      }
+    });
+  });
+
+  function handleImageSelect(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    var dt = new DataTransfer();
+    dt.items.add(file);
+    imageInput.files = dt.files;
+    var r = new FileReader();
+    r.onload = function() { imagePreviewImg.src = r.result; imagePreview.classList.remove('hidden'); };
+    r.readAsDataURL(file);
+  }
+  imageInput && imageInput.addEventListener('change', function() {
+    if (this.files && this.files[0]) handleImageSelect(this.files[0]);
+    else imagePreview.classList.add('hidden');
+  });
+  var dropZone = document.getElementById('image-drop-zone');
+  if (dropZone) {
+    dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.style.borderColor = 'var(--theme-accent)'; });
+    dropZone.addEventListener('dragleave', function() { dropZone.style.borderColor = ''; });
+    dropZone.addEventListener('drop', function(e) { e.preventDefault(); dropZone.style.borderColor = ''; if (e.dataTransfer.files[0]) handleImageSelect(e.dataTransfer.files[0]); });
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+  });
+})();
+</script>

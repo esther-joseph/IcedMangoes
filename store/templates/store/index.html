@@ -1,28 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artist Store</title>
-</head>
-<body>
-    <h1>Available Artworks</h1>
-    {% if artworks %}
-        <ul>
-            {% for art in artworks %}
-            <li>
-                <h2>{{ art.title }}</h2>
-                {% if art.image %}
-                    <img src="{{ art.image.url }}" alt="{{ art.title }}" width="200">
-                {% endif %}
-                <p>{{ art.description }}</p>
-                <p>Price: ${{ art.price }}</p>
-                <p>Artist: {{ art.artist.name }}</p>
-            </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No artworks available at this time.</p>
+{% extends "store/base.html" %}
+
+{% block title %}{{ site_settings.site_name|default:"Artist Store" }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen" style="background: var(--theme-bg);">
+    <header class="sticky top-0 z-10 backdrop-blur border-b" style="background: var(--theme-bg-header); border-color: var(--theme-border);">
+        <div class="container mx-auto px-4 py-4">
+            {% include "store/components/nav_bar.html" %}
+        </div>
+    </header>
+
+    <main class="container mx-auto py-8">
+        <p class="text-sm mb-4" style="color: var(--theme-text-muted);">{{ site_settings.tagline|default:"Discover and collect artworks" }}</p>
+        {% if artworks %}
+            {% include "store/components/pinterest_board.html" with artworks=artworks %}
+        {% else %}
+            <div class="flex flex-col items-center justify-center py-24 px-4">
+                <p class="text-center" style="color: var(--theme-text-muted);">No artworks available at this time.</p>
+            </div>
+        {% endif %}
+    </main>
+    {% if show_add_artwork %}
+        {% include "store/components/add_artwork_modal.html" %}
     {% endif %}
-</body>
-</html>
+</div>
+{% endblock %}

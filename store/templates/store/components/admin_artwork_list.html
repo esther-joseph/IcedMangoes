@@ -1,0 +1,26 @@
+{# Admin artwork list component - list with update/delete actions #}
+{# Usage: {% include "store/components/admin_artwork_list.html" with artworks=artworks %} #}
+<div class="space-y-3">
+    {% for art in artworks %}
+    <div class="flex items-center gap-4 p-3 rounded-lg" style="background: var(--theme-bg); border: 1px solid var(--theme-border);">
+        {% if art.image %}
+            <img src="{{ art.image.url }}" alt="{{ art.title }}" class="w-12 h-12 rounded object-cover shrink-0">
+        {% else %}
+            <div class="w-12 h-12 rounded shrink-0 flex items-center justify-center text-xs" style="background: var(--theme-border); color: var(--theme-text-muted);">—</div>
+        {% endif %}
+        <div class="flex-1 min-w-0">
+            <p class="font-medium truncate" style="color: var(--theme-text);">{{ art.title }}</p>
+            <p class="text-sm truncate" style="color: var(--theme-text-muted);">{{ art.artist.name }} · ${{ art.price }}{% if not art.available %} · Hidden{% endif %}</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <a href="{% url 'admin_artwork_edit' art.id %}" class="text-sm px-3 py-1.5 rounded" style="background: var(--theme-border); color: var(--theme-text);">Update</a>
+            <form method="post" action="{% url 'admin_artwork_delete' art.id %}" onsubmit="return confirm('Delete this artwork?');" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="text-sm px-3 py-1.5 rounded" style="background: var(--theme-accent); color: white;">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-sm py-4 text-center" style="color: var(--theme-text-muted);">No artworks yet. Add one from the gallery using the + button.</p>
+    {% endfor %}
+</div>

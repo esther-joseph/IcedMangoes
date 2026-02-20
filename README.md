@@ -1,6 +1,8 @@
 # IcedMangoes
 
-A backend architecture showcase demonstrating clean architecture, service-layer design, and production-oriented practices. Built with Django and MongoDB to model a storefront domain suitable for iterative schema evolution.
+A backend architecture showcase demonstrating clean architecture, service-layer design, and production-oriented practices.
+
+**Documentation**: [documentation/README.md](documentation/README.md) – wiki with setup, tech stack, and API guides. Built with Django and MongoDB to model a storefront domain suitable for iterative schema evolution.
 
 ---
 
@@ -14,10 +16,14 @@ IcedMangoes implements a storefront API and presentation layer for an artist mar
 
 | Layer | Technology |
 |-------|------------|
-| Framework | Django 4.2+ |
-| Database | MongoDB (via Djongo) |
-| Media | Pillow for image handling |
+| Framework | Django 3.2–4.1 |
+| Database | MongoDB (via Djongo) or SQLite (optional, `USE_SQLITE=1`) |
+| API | GraphQL (Graphene-Django) |
+| ORM (optional) | Prisma Client Python (SQLite) |
+| Media | Pillow |
 | Runtime | Python 3.11 |
+| Frontend | Tailwind CSS, PostCSS, CSS custom properties (theme switching) |
+| Build | Node.js, npm (for CSS) |
 | Orchestration | Docker Compose |
 
 ---
@@ -56,7 +62,9 @@ Volumes persist data; `.env` holds credentials. The setup mirrors a minimal prod
 
 ## 5. Local Setup Instructions
 
-**Prerequisites**: Docker and Docker Compose installed.
+**Option A: Docker**
+
+Prerequisites: Docker and Docker Compose.
 
 ```bash
 docker-compose up --build
@@ -69,10 +77,50 @@ docker-compose exec web python manage.py migrate
 docker-compose exec web python manage.py createsuperuser   # optional
 ```
 
+**Option B: Local Python (no Docker)**
+
+```bash
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+npm install
+npm run build:css
+USE_SQLITE=1 python manage.py migrate
+USE_SQLITE=1 python manage.py runserver
+```
+
+**Prisma (optional, SQLite only)**:
+
+```bash
+export DATABASE_URL="file:./db.sqlite3"
+prisma generate
+```
+
+**GraphQL examples** (http://localhost:8000/graphql/):
+
+```graphql
+# Query artworks
+query { artworks { id title price artist { name } } }
+
+# Query single artwork
+query { artwork(id: 1) { title description price } }
+
+# Create artwork (metadata only; image via form)
+mutation {
+  createArtwork(
+    artistName: "Jane Doe"
+    title: "Sunset"
+    description: "Oil on canvas"
+    price: 199.99
+    tags: "abstract, landscape"
+  ) { ok artwork { id title } }
+}
+```
+
 **Endpoints**:
 
 - Application: http://localhost:8000
-- Mongo Express: http://localhost:8081
+- GraphQL (GraphiQL): http://localhost:8000/graphql/
+- Mongo Express: http://localhost:8081 (Docker only)
 
 ---
 
@@ -113,3 +161,9 @@ docker-compose exec web python manage.py createsuperuser   # optional
 - **Environment parity**: Containerized setup for reproducible development and deployment.
 - **Deliberate technology choices**: Documented tradeoffs for database and ORM selection.
 - **Production-minded practices**: Structure that supports testing, extension, and future scaling without major rewrites.
+
+---
+
+## Disclaimer
+
+This project is provided as-is. Users are responsible for complying with all applicable laws including data protection and payment processing regulations.

@@ -1,0 +1,15 @@
+{
+  "name": "iced-mangoes",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build:css": "postcss store/static/store/css/input.css -o store/static/store/css/output.css",
+    "build:css:watch": "postcss store/static/store/css/input.css -o store/static/store/css/output.css --watch"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "postcss-cli": "^10.1.0",
+    "tailwindcss": "^3.4.1"
+  }
+}

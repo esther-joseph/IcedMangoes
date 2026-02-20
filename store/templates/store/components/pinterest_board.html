@@ -1,0 +1,7 @@
+{# Pinterest-style masonry board component #}
+{# Usage: {% include "store/components/pinterest_board.html" with artworks=artworks %} #}
+<div class="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 px-4">
+    {% for art in artworks %}
+        {% include "store/components/artwork_card.html" with art=art %}
+    {% endfor %}
+</div>

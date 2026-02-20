@@ -1,0 +1,26 @@
+{% load static %}
+<nav class="flex items-center justify-between gap-4 flex-wrap" style="color: var(--theme-text);">
+    <div class="flex items-center gap-6">
+        <a href="{% url 'index' %}" class="font-semibold hover:opacity-80" style="color: var(--theme-text);">{{ site_settings.site_name|default:"Artist Store" }}</a>
+        <a href="{% url 'index' %}" class="text-sm hover:opacity-80" style="color: var(--theme-text-muted);">Gallery</a>
+        {% if is_user %}
+            <a href="{% url 'orders_list' %}" class="text-sm hover:opacity-80" style="color: var(--theme-text-muted);">Past Orders</a>
+        {% endif %}
+        {% if is_admin %}
+            <a href="{% url 'store_admin' %}" class="text-sm hover:opacity-80" style="color: var(--theme-accent);">Admin Panel</a>
+            <a href="{% url 'profile' %}" class="text-sm hover:opacity-80" style="color: var(--theme-text-muted);">Profile</a>
+        {% endif %}
+        {% if is_public %}
+            <a href="{% url 'login' %}" class="text-sm hover:opacity-80" style="color: var(--theme-text-muted);">Login</a>
+        {% endif %}
+        {% if is_user or is_admin %}
+            <a href="{% url 'logout' %}" class="text-sm hover:opacity-80" style="color: var(--theme-text-muted);">Logout</a>
+        {% endif %}
+    </div>
+    <div class="flex items-center gap-3">
+        {% if show_add_artwork %}
+            {% include "store/components/add_artwork_button.html" %}
+        {% endif %}
+        {% include "store/components/cart_button.html" %}
+    </div>
+</nav>

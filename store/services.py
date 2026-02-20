@@ -25,3 +25,18 @@ class ArtworkService:
             .select_related("artist")
             .order_by("-id")
         )
+
+    @staticmethod
+    def create_artwork(artist_name: str, title: str, description: str, price, image, tags: str = "") -> Artwork:
+        """Create an artwork and its artist if needed."""
+        from .models import Artist
+
+        artist, _ = Artist.objects.get_or_create(name=artist_name.strip())
+        return Artwork.objects.create(
+            artist=artist,
+            title=title.strip(),
+            description=description.strip(),
+            price=price,
+            image=image,
+            tags=tags.strip() if tags else "",
+        )
