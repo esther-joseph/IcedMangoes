@@ -4,13 +4,7 @@
 
 {% block content %}
 <div class="min-h-screen" style="background: var(--theme-bg);">
-    <header class="sticky top-0 z-10 backdrop-blur border-b" style="background: var(--theme-bg-header); border-color: var(--theme-border);">
-        <div class="container mx-auto px-4 py-4">
-            {% include "store/components/nav_bar.html" %}
-        </div>
-    </header>
-
-    <main class="container mx-auto py-8">
+    <div class="container mx-auto py-8 px-4">
         <p class="text-sm mb-4" style="color: var(--theme-text-muted);">{{ site_settings.tagline|default:"Discover and collect artworks" }}</p>
         {% if artworks %}
             {% include "store/components/pinterest_board.html" with artworks=artworks %}
@@ -19,7 +13,7 @@
                 <p class="text-center" style="color: var(--theme-text-muted);">No artworks available at this time.</p>
             </div>
         {% endif %}
-    </main>
+    </div>
     {% if show_add_artwork %}
         {% include "store/components/add_artwork_modal.html" %}
     {% endif %}

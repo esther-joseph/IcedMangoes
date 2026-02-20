@@ -7,7 +7,7 @@
       <span class="flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-xs font-semibold" style="background: var(--theme-accent); color: white;">{{ cart_items|length }}</span>
     {% endif %}
   </button>
-  <div id="cart-dropdown" class="absolute right-0 mt-2 w-80 rounded-xl shadow-xl py-3 hidden z-30" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+  <div id="cart-dropdown" class="absolute left-full ml-2 top-0 w-80 rounded-xl shadow-xl py-3 hidden z-30" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
     {% if cart_items %}
       <div class="max-h-64 overflow-y-auto px-4">
         {% for art, qty in cart_items %}

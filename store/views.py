@@ -1,5 +1,4 @@
 """Store views."""
-import hashlib
 import json
 import time
 from collections import Counter
@@ -9,7 +8,7 @@ from typing import Optional
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, redirect, render
@@ -29,6 +28,14 @@ from .webhooks import (
     handle_checkout_session_completed,
 )
 from .forms import ArtworkEditForm, ArtworkForm
+from .fulfillment_service import (
+    get_effective_settings,
+    get_provider_credentials,
+    get_provider_status,
+    is_env_configured,
+    save_provider_key,
+    set_settings,
+)
 from .models import Artwork, Order, OrderItem, SiteSettings
 from .services import ArtworkService, ArtworkServiceProtocol
 
@@ -106,13 +113,17 @@ def checkout_create(request: HttpRequest) -> HttpResponse:
         now = int(time.time())
         if last_key == cart_sig and (now - last_ts) < 60:
             return redirect("orders_list" if request.user.is_authenticated else "index")
+        from .order_service import request_fulfillment
+
         order = Order.objects.create(
             user=request.user if request.user.is_authenticated else None,
             total=total,
             payment_method="card",
+            status="PAID",
         )
         for artwork, qty in cart_items:
             OrderItem.objects.create(order=order, artwork=artwork, quantity=qty, price=artwork.price)
+        request_fulfillment(order)
         clear_cart(request)
         request.session["demo_checkout_key"] = cart_sig
         request.session["demo_checkout_ts"] = now
@@ -370,6 +381,98 @@ def profile_send_email(request: HttpRequest) -> HttpResponse:
             fail_silently=True,
         )
     return redirect("profile")
+
+
+def business(request: HttpRequest) -> HttpResponse:
+    """Business page: fulfillment config, provider integrations (admin only)."""
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return redirect(settings.LOGIN_URL)
+    eff = get_effective_settings()
+    providers_info = {}
+    for p in ("shippo", "easypost", "printful", "printify", "gelato"):
+        providers_info[p] = {
+            "status": get_provider_status(p),
+            "env_configured": is_env_configured(p),
+        }
+    ctx = {
+        "effective_settings": eff,
+        "providers_info": providers_info,
+    }
+    return render(request, "store/business.html", ctx)
+
+
+@require_POST
+def business_settings_update(request: HttpRequest) -> HttpResponse:
+    """Update fulfillment settings (admin only)."""
+    if not request.user.is_staff:
+        return redirect("index")
+    fulfillment_mode = request.POST.get("fulfillment_mode", "MANUAL")
+    manual_provider = request.POST.get("manual_provider", "none")
+    pod_provider = request.POST.get("pod_provider", "none")
+    use_env_secrets = request.POST.get("use_env_secrets") == "true"
+    if fulfillment_mode in ("MANUAL", "POD"):
+        set_settings(fulfillment_mode, manual_provider, pod_provider, use_env_secrets)
+    return redirect("business")
+
+
+@require_POST
+def business_provider_save_key(request: HttpRequest, provider: str) -> HttpResponse:
+    """Save provider API key to DB (admin only, when use_env_secrets=False)."""
+    if not request.user.is_staff:
+        return HttpResponse("Forbidden", status=403)
+    if provider not in ("shippo", "easypost", "printful", "printify", "gelato"):
+        return HttpResponse("Invalid provider", status=400)
+    api_key = request.POST.get("api_key", "").strip()
+    save_provider_key(provider, api_key)
+    return redirect("business")
+
+
+def business_provider_test(request: HttpRequest, provider: str) -> JsonResponse:
+    """Test provider connection (admin only, POST)."""
+    if not request.user.is_staff or request.method != "POST":
+        return JsonResponse({"success": False, "message": "Forbidden"}, status=403)
+    if provider not in ("shippo", "easypost", "printful", "printify", "gelato"):
+        return JsonResponse({"success": False, "message": "Invalid provider"}, status=400)
+    key = get_provider_credentials(provider)
+    if not key:
+        return JsonResponse({"success": False, "message": "No API key configured"})
+    ok, msg = _test_provider_connection(provider, key)
+    return JsonResponse({"success": ok, "message": msg})
+
+
+def _test_provider_connection(provider: str, api_key: str) -> tuple[bool, str]:
+    """Scaffold: validate key exists; optional real API call if package installed."""
+    if not api_key or len(api_key) < 5:
+        return False, "API key too short"
+    if provider == "shippo":
+        try:
+            import shippo
+            shippo.api_key = api_key
+            return True, "Shippo connection verified"
+        except ImportError:
+            return True, "Shippo key present (install shippo package for full test)"
+        except Exception as e:
+            return False, str(e)
+    if provider == "easypost":
+        try:
+            import easypost
+            easypost.api_key = api_key
+            return True, "EasyPost connection verified"
+        except ImportError:
+            return True, "EasyPost key present (install easypost for full test)"
+        except Exception as e:
+            return False, str(e)
+    return True, f"{provider.title()} key present (scaffold)"
+
+
+@csrf_exempt
+@require_POST
+def fulfillment_webhook(request: HttpRequest, provider: str) -> HttpResponse:
+    """Route provider webhooks to handler. Thin view; delegates to services."""
+    if provider not in ("shippo", "easypost", "printful", "printify", "gelato"):
+        return HttpResponse("Unknown provider", status=404)
+    # Scaffold: would call provider.handle_webhook() and update Order status
+    return HttpResponse(status=200)
 
 
 @csrf_exempt

@@ -8,8 +8,13 @@
     <link href="{% static 'store/css/themes.css' %}" rel="stylesheet">
     <link href="{% static 'store/css/output.css' %}" rel="stylesheet">
 </head>
-<body class="min-h-screen" style="background: var(--theme-bg, #f5f0e8); color: var(--theme-text, #3d3730);">
-    {% block content %}{% endblock %}
+<body class="min-h-screen flex" style="background: var(--theme-bg, #f5f0e8); color: var(--theme-text, #3d3730);">
+    <aside class="w-56 shrink-0 border-r flex flex-col" style="background: var(--theme-bg-header); border-color: var(--theme-border);">
+        {% include "store/components/nav_bar.html" %}
+    </aside>
+    <main class="flex-1 min-w-0 overflow-auto">
+        {% block content %}{% endblock %}
+    </main>
     <script>
       (function() {
         var saved = localStorage.getItem('artist-store-theme');

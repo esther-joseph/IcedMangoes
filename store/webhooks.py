@@ -76,16 +76,22 @@ def handle_checkout_session_completed(session) -> Order | None:
         except ValueError:
             pass
 
+    from .order_service import request_fulfillment
+
     with transaction.atomic():
         order = Order.objects.create(
             user_id=user_id,
             stripe_session_id=stripe_session_id,
             total=amount_total,
             payment_method="card",
+            status="PAID",
         )
         for line in line_items_data:
             _create_order_item_from_line(order, line)
 
+    result = request_fulfillment(order)
+    if not result.get("success"):
+        logger.warning("Fulfillment request for order %s: %s", order.id, result.get("message", ""))
     logger.info("Created order %s for Stripe session %s", order.id, stripe_session_id)
     return order
 

@@ -57,4 +57,6 @@ docker-compose exec web python manage.py createsuperuser  # optional
 | `DJANGO_DEBUG` | Debug mode | `true` |
 | `DJANGO_ALLOWED_HOSTS` | Allowed hosts | `localhost,127.0.0.1` |
 
+**Media storage (production):** For Render or any deployment with ephemeral storage, configure [Supabase Storage](deploy-render.md#media-storage-supabase-storage). When `SUPABASE_*` vars are set, uploads go to Supabase; otherwise they use local `media/`.
+
 Copy `.env.example` to `.env` and adjust as needed.

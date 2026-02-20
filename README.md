@@ -2,7 +2,15 @@
 
 A backend architecture showcase demonstrating clean architecture, service-layer design, and production-oriented practices.
 
-**Documentation**: [documentation/README.md](documentation/README.md) – wiki with setup, tech stack, and API guides. Built with Django and MongoDB to model a storefront domain suitable for iterative schema evolution.
+**Documentation**: [documentation/README.md](documentation/README.md) – wiki with setup, tech stack, and API guides. **New?** Start with [Installation & Deployment](documentation/installation-and-deployment.md). Built with Django and MongoDB to model a storefront domain suitable for iterative schema evolution.
+
+---
+
+## Open Source Philosophy
+
+This project is intentionally structured as a modular, production-oriented template to accelerate storefront development while maintaining architectural clarity.
+
+Contributions, issues, and pull requests are welcome.
 
 ---
 
@@ -20,7 +28,7 @@ IcedMangoes implements a storefront API and presentation layer for an artist mar
 | Database | MongoDB (via Djongo) or SQLite (optional, `USE_SQLITE=1`) |
 | API | GraphQL (Graphene-Django) |
 | ORM (optional) | Prisma Client Python (SQLite) |
-| Media | Pillow |
+| Media | Pillow, django-storages (Supabase S3 for production) |
 | Runtime | Python 3.11 |
 | Frontend | Tailwind CSS, PostCSS, CSS custom properties (theme switching) |
 | Build | Node.js, npm (for CSS) |
@@ -61,6 +69,8 @@ Volumes persist data; `.env` holds credentials. The setup mirrors a minimal prod
 ---
 
 ## 5. Local Setup Instructions
+
+For a full installation checklist, tool verification, and deployment guide, see [Installation & Deployment](documentation/installation-and-deployment.md).
 
 **Option A: Docker**
 
@@ -119,8 +129,13 @@ mutation {
 **Endpoints**:
 
 - Application: http://localhost:8000
+- Business (admin): http://localhost:8000/business/ — fulfillment configuration, provider integrations
 - GraphQL (GraphiQL): http://localhost:8000/graphql/
 - Mongo Express: http://localhost:8081 (Docker only)
+
+**Business (Admin) Page** — Staff users can configure fulfillment mode (Self-Fulfillment vs Print-on-Demand), select providers (Shippo, EasyPost, Printful, Printify, Gelato), and manage API keys. Use env vars for production; DB-stored keys are for local demos only. See [documentation/business-page.md](documentation/business-page.md).
+
+**Media Storage (Supabase)** — Render and similar platforms have ephemeral filesystems. For production, use [Supabase Storage](documentation/deploy-render.md#media-storage-supabase-storage) for artwork images. When `SUPABASE_*` env vars are set, uploads go to Supabase; otherwise they use local `media/`.
 
 ---
 
@@ -166,4 +181,29 @@ mutation {
 
 ## Disclaimer
 
-This project is provided as-is. Users are responsible for complying with all applicable laws including data protection and payment processing regulations.
+This project is provided "as is", without warranty of any kind. The author is not responsible for any damages, data loss, legal issues, or compliance violations resulting from the use or deployment of this software.
+
+Users are solely responsible for ensuring compliance with all applicable laws, including but not limited to data protection, e-commerce regulations, and payment processing requirements.
+
+---
+
+## Template Usage Notice
+
+IcedMangoes is a free backend storefront template. The repository author does not operate, host, or manage any live deployments built from this code.
+
+If you deploy this template publicly, you are responsible for:
+
+- Data protection compliance (e.g., GDPR, CCPA, etc.)
+- Payment processor compliance (e.g., Stripe requirements)
+- Hosting security and configuration
+- Providing your own Privacy Policy and Terms of Service
+
+Optional legal document templates may be included for convenience, but they must be reviewed and customized for your jurisdiction.
+
+---
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+You are free to use, modify, and deploy this template for personal or commercial projects.

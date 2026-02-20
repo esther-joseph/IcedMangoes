@@ -2,12 +2,7 @@
 {% block title %}Past Orders – {{ site_settings.site_name|default:"Artist Store" }}{% endblock %}
 {% block content %}
 <div class="min-h-screen" style="background: var(--theme-bg);">
-    <header class="sticky top-0 z-10 backdrop-blur border-b" style="background: var(--theme-bg-header); border-color: var(--theme-border);">
-        <div class="container mx-auto px-4 py-4">
-            {% include "store/components/nav_bar.html" %}
-        </div>
-    </header>
-    <main class="container mx-auto py-8 px-4">
+    <div class="container mx-auto py-8 px-4">
         <h1 class="text-2xl font-bold mb-6" style="color: var(--theme-text);">Past Orders</h1>
         {% if orders %}
             <div class="space-y-3">
@@ -30,6 +25,7 @@
                     <div class="order-accordion-content hidden px-4 pb-4" data-order-id="{{ order.id }}">
                         <div class="pt-2 border-t space-y-3" style="border-color: var(--theme-border);">
                             <p class="text-sm" style="color: var(--theme-text-muted);">Date: {{ order.created_at|date:"F d, Y g:i A" }}</p>
+                            <p class="text-sm" style="color: var(--theme-text-muted);">Status: {{ order.status|default:"PAID" }}</p>
                             <p class="text-sm" style="color: var(--theme-text-muted);">Payment: {{ order.payment_method|default:"card" }}</p>
                             <p class="text-sm font-medium" style="color: var(--theme-text);">Items:</p>
                             {% for item in order.orderitem_set.all %}
@@ -54,7 +50,7 @@
         {% else %}
             <p class="text-center py-12" style="color: var(--theme-text-muted);">No orders yet.</p>
         {% endif %}
-    </main>
+    </div>
 </div>
 <script>
 (function() {

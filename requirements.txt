@@ -4,3 +4,6 @@ graphene-django>=3.2
 pillow
 prisma
 stripe
+django-storages[s3]
+boto3
+gunicorn

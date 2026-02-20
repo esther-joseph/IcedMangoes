@@ -43,13 +43,33 @@ class Artwork(models.Model):
 class Order(models.Model):
     """Order placed by a user."""
 
+    STATUS_CHOICES = [
+        ("DRAFT", "Draft"),
+        ("PENDING_PAYMENT", "Pending payment"),
+        ("PAID", "Paid"),
+        ("FULFILLMENT_PENDING", "Fulfillment pending"),
+        ("IN_PRODUCTION", "In production"),
+        ("SHIPPED", "Shipped"),
+        ("DELIVERED", "Delivered"),
+        ("CANCELLED", "Cancelled"),
+        ("REFUNDED", "Refunded"),
+    ]
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
     stripe_session_id = models.CharField(max_length=255, blank=True)
     payment_method = models.CharField(max_length=50, default="card")
     total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0"))
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="PENDING_PAYMENT",
+    )
+    fulfilling_provider = models.CharField(max_length=50, blank=True)
+    tracking_number = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -89,3 +109,55 @@ class SiteSettings(models.Model):
     def get(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class FulfillmentSettings(models.Model):
+    """
+    Singleton admin settings for fulfillment mode and provider selection.
+    No secrets stored by default; use_env_secrets=True prefers environment variables.
+    """
+
+    fulfillment_mode = models.CharField(
+        max_length=20,
+        choices=[("MANUAL", "Self-Fulfillment"), ("POD", "Print-on-Demand")],
+        default="MANUAL",
+    )
+    manual_provider = models.CharField(
+        max_length=20,
+        choices=[("shippo", "Shippo"), ("easypost", "EasyPost"), ("none", "None")],
+        default="none",
+    )
+    pod_provider = models.CharField(
+        max_length=20,
+        choices=[("printful", "Printful"), ("printify", "Printify"), ("gelato", "Gelato"), ("none", "None")],
+        default="none",
+    )
+    use_env_secrets = models.BooleanField(
+        default=True,
+        help_text="If True, read API keys from env. If False, use DB-stored keys (local dev only).",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Fulfillment settings"
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class ProviderSecret(models.Model):
+    """
+    Stores provider API keys for local demos when use_env_secrets=False.
+    NOT recommended for production. Keys stored in plaintext; use encryption if handling real secrets.
+    """
+
+    provider_name = models.CharField(max_length=50, unique=True)
+    api_key = models.CharField(max_length=512, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Provider secret"
+        verbose_name_plural = "Provider secrets"

@@ -21,8 +21,13 @@ urlpatterns = [
     path("profile/", views.profile, name="profile"),
     path("profile/substack/", views.profile_substack_post, name="profile_substack_post"),
     path("profile/send-email/", views.profile_send_email, name="profile_send_email"),
+    path("business/", views.business, name="business"),
+    path("business/settings/update/", views.business_settings_update, name="business_settings_update"),
+    path("business/provider/<str:provider>/save-key/", views.business_provider_save_key, name="business_provider_save_key"),
+    path("business/provider/<str:provider>/test/", views.business_provider_test, name="business_provider_test"),
     path("webhooks/stripe/", views.stripe_webhook, name="stripe_webhook"),
+    path("webhooks/fulfillment/<str:provider>/", views.fulfillment_webhook, name="fulfillment_webhook"),
 ]
 
-if settings.DEBUG:
+if settings.DEBUG and settings.MEDIA_ROOT:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

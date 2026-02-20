@@ -110,8 +110,38 @@ USE_TZ = True
 # Static and media
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
+
+# Media storage: Supabase (S3-compatible) or local filesystem
+_supabase_bucket = os.environ.get("SUPABASE_STORAGE_BUCKET", "").strip()
+_supabase_endpoint = os.environ.get("SUPABASE_S3_ENDPOINT", "").strip()
+_supabase_access = os.environ.get("SUPABASE_S3_ACCESS_KEY_ID", "").strip()
+_supabase_secret = os.environ.get("SUPABASE_S3_SECRET_ACCESS_KEY", "").strip()
+_supabase_region = os.environ.get("SUPABASE_S3_REGION", "us-east-1").strip()
+_use_supabase_storage = all([_supabase_bucket, _supabase_endpoint, _supabase_access, _supabase_secret])
+
+if _use_supabase_storage:
+    DEFAULT_FILE_STORAGE = "store.storage_backends.SupabaseS3Storage"
+    AWS_ACCESS_KEY_ID = _supabase_access
+    AWS_SECRET_ACCESS_KEY = _supabase_secret
+    AWS_STORAGE_BUCKET_NAME = _supabase_bucket
+    AWS_S3_ENDPOINT_URL = _supabase_endpoint
+    AWS_S3_REGION_NAME = _supabase_region
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_DEFAULT_ACL = None
+    AWS_S3_FILE_OVERWRITE = False
+    _media_private = os.environ.get("MEDIA_PRIVATE", "").lower() in ("true", "1", "yes")
+    AWS_QUERYSTRING_AUTH = _media_private
+    AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
+    _public_base = os.environ.get("SUPABASE_STORAGE_PUBLIC_BASE_URL", "").strip()
+    SUPABASE_STORAGE_PUBLIC_BASE_URL = _public_base or None  # For storage backend
+    if _public_base and not _media_private:
+        MEDIA_URL = _public_base.rstrip("/") + "/"
+    else:
+        MEDIA_URL = f"{_supabase_endpoint.rstrip('/').rsplit('/', 1)[0]}/object/public/{_supabase_bucket}/"
+    MEDIA_ROOT = ""  # Not used with S3
+else:
+    MEDIA_URL = "media/"
+    MEDIA_ROOT = BASE_DIR / "media"
 
 # Auth
 LOGIN_URL = "/login/"
@@ -122,6 +152,13 @@ LOGOUT_REDIRECT_URL = "/"
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
+# Fulfillment providers (see .env.example)
+SHIPPO_API_TOKEN = os.environ.get("SHIPPO_API_TOKEN", "")
+EASYPOST_API_KEY = os.environ.get("EASYPOST_API_KEY", "")
+PRINTFUL_API_KEY = os.environ.get("PRINTFUL_API_KEY", "")
+PRINTIFY_API_KEY = os.environ.get("PRINTIFY_API_KEY", "")
+GELATO_API_KEY = os.environ.get("GELATO_API_KEY", "")
 
 # Email
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@localhost")

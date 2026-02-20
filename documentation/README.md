@@ -10,7 +10,9 @@ Central documentation hub for the IcedMangoes artist storefront project. Use thi
 
 | Document | Description |
 |----------|-------------|
-| [Getting Started](getting-started.md) | Project setup, local development, Docker, environment variables |
+| [Installation & Deployment](installation-and-deployment.md) | **Start here** — Installation checklist, tools verification, step-by-step setup, deployment |
+| [Getting Started](getting-started.md) | Quick start, environment variables reference |
+| [Deploy to Render](deploy-render.md) | Render deployment, Supabase Storage for media (required for production) |
 
 ### Project Usage
 
@@ -18,6 +20,7 @@ Central documentation hub for the IcedMangoes artist storefront project. Use thi
 |----------|-------------|
 | [Using the Storefront](using-the-storefront.md) | How to browse artworks, switch themes, add artworks via the modal |
 | [Admin Guide](admin-guide.md) | Django admin: artists, artworks, user management |
+| [Business Page](business-page.md) | Fulfillment configuration, provider integrations, webhooks (admin only) |
 
 ### Tech Stack & Tools
 
@@ -55,6 +58,7 @@ Central documentation hub for the IcedMangoes artist storefront project. Use thi
 ## Quick Links
 
 - **App**: http://localhost:8000
+- **Business (admin)**: http://localhost:8000/business/
 - **GraphQL (GraphiQL)**: http://localhost:8000/graphql/
 - **Admin**: http://localhost:8000/admin/
 - **Main README**: [../README.md](../README.md)
