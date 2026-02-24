@@ -35,13 +35,13 @@
         </section>
 
         {# Stripe integration #}
-        {% include "store/components/admin_stripe_integration.html" %}
+        {% include "store/components/organisms/admin/admin_stripe_integration.html" %}
 
         {# Artwork gallery management #}
         <section class="rounded-xl p-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
             <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Artworks</h2>
             <p class="text-sm mb-4" style="color: var(--theme-text-muted);">Add artworks from the gallery (+ button). Update or delete below.</p>
-            {% include "store/components/admin_artwork_list.html" with artworks=artworks %}
+            {% include "store/components/organisms/admin/admin_artwork_list.html" with artworks=artworks %}
         </section>
     </div>
 </div>

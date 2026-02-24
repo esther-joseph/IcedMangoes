@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { getSupabaseClient } from "@/lib/supabase/get-client";
-import { ProductCard } from "@/components/ProductCard";
+import { Hero } from "@/components/molecules/Hero";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { ProductGrid } from "@/components/organisms/ProductGrid";
+import { PageLayout } from "@/components/templates/PageLayout";
 
 export default async function HomePage() {
   const supabase = await getSupabaseClient();
@@ -17,42 +20,37 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
-      <section className="mb-12 text-center">
-        <h1 className="mb-4 text-3xl font-semibold tracking-tight text-[var(--foreground)]">
-          Discover & collect art
-        </h1>
-        <p className="mx-auto max-w-xl text-[var(--muted)]">
-          A clean, artist-friendly storefront. Deploy to Vercel with Supabase in
-          minutes.
-        </p>
-      </section>
+    <PageLayout>
+      <Hero
+        title="Discover & collect art"
+        subtitle="A clean, artist-friendly storefront. Deploy to Vercel with Supabase in minutes."
+      />
 
       {products.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--card-bg)] px-8 py-16 text-center">
-          <p className="mb-4 text-[var(--muted)]">No products yet.</p>
-          <p className="text-sm text-[var(--muted)]">
-            Add products via Supabase dashboard or the{" "}
-            <Link href="/business" className="underline hover:text-[var(--accent)]">
-              Business
-            </Link>{" "}
-            page (Phase 3).
-          </p>
-          <p className="mt-4 text-xs text-[var(--muted)]">
-            Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are
-            set in .env.local
-          </p>
-        </div>
+        <EmptyState
+          title="No products yet."
+          description={
+            <>
+              <p className="mb-2">
+                Add products via Supabase dashboard or the{" "}
+                <Link href="/business" className="underline hover:text-[var(--accent)]">
+                  Business
+                </Link>{" "}
+                page (Phase 3).
+              </p>
+              <p className="text-xs">
+                Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set
+                in .env.local
+              </p>
+            </>
+          }
+        />
       ) : (
         <>
           <h2 className="mb-6 text-xl font-medium text-[var(--foreground)]">
             Featured
           </h2>
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
-            {products.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
+          <ProductGrid products={products} />
           <div className="mt-10 text-center">
             <Link
               href="/shop"
@@ -63,6 +61,6 @@ export default async function HomePage() {
           </div>
         </>
       )}
-    </div>
+    </PageLayout>
   );
 }

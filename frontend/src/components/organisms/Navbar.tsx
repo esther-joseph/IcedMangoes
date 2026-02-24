@@ -1,10 +1,8 @@
 import Link from "next/link";
+import { CartLink } from "@/components/molecules/CartLink";
 
 export function Navbar() {
-  const adminEmails = process.env.ADMIN_EMAILS?.split(",").map((e) =>
-    e.trim().toLowerCase()
-  );
-  const showBusiness = true; // Phase 3: gate by auth, check adminEmails
+  const showBusiness = true; // Phase 3: gate by auth
 
   return (
     <nav className="border-b border-[var(--border)] bg-[var(--card-bg)]">
@@ -25,6 +23,7 @@ export function Navbar() {
           >
             Shop
           </Link>
+          <CartLink />
           {showBusiness && (
             <Link
               href="/business"

@@ -2,7 +2,12 @@
 
 [← Back to Wiki](README.md)
 
-This guide walks you through installing IcedMangoes (artist storefront template) and deploying it to production.
+This guide walks you through installing IcedMangoes and deploying to production. **Two paths:**
+
+| Path | Doc | Use when |
+|------|-----|----------|
+| **Django backend** | This page | Full store (cart, checkout, fulfillment, GraphQL) |
+| **Next.js frontend** | [Frontend: Vercel + Supabase](frontend-vercel-supabase.md) | Minimal setup, no Docker, cart + Stripe checkout |
 
 ---
 
@@ -153,7 +158,13 @@ Render offers a free tier and straightforward deployment. The filesystem is ephe
 
 Full Render details: [deploy-render.md](deploy-render.md)
 
-### Other platforms
+### Vercel + Supabase (Next.js frontend)
+
+For the artist-friendly Next.js storefront, see [Frontend: Vercel + Supabase](frontend-vercel-supabase.md). No Docker; cart + Stripe checkout. Add `STRIPE_*` env vars and configure webhooks; see [Stripe Setup](stripe-setup.md).
+
+---
+
+### Other platforms (Django)
 
 - **Railway, Fly.io, Heroku, etc.** — Use the same build/start commands. Ensure:
   - `DJANGO_ALLOWED_HOSTS` includes your app URL

@@ -7,8 +7,8 @@
     <div class="container mx-auto py-8 px-4">
         <p class="text-sm mb-4" style="color: var(--theme-text-muted);">{{ site_settings.tagline|default:"Discover and collect artworks" }}</p>
         {% if artworks %}
-            {% include "store/components/pinterest_board.html" with artworks=artworks %}
-            {% include "store/components/artwork_detail_modal.html" %}
+            {% include "store/components/organisms/pinterest_board.html" with artworks=artworks %}
+            {% include "store/components/organisms/artwork_detail_modal.html" %}
         {% else %}
             <div class="flex flex-col items-center justify-center py-24 px-4">
                 <p class="text-center" style="color: var(--theme-text-muted);">No artworks available at this time.</p>
@@ -16,7 +16,7 @@
         {% endif %}
     </div>
     {% if show_add_artwork %}
-        {% include "store/components/add_artwork_modal.html" %}
+        {% include "store/components/organisms/add_artwork_modal.html" %}
     {% endif %}
 </div>
 {% endblock %}

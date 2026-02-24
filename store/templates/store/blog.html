@@ -1,0 +1,62 @@
+{% extends "store/base.html" %}
+
+{% block title %}Blog — {{ site_settings.site_name|default:"Artist Store" }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen" style="background: var(--theme-bg);">
+    <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-3xl">
+        <h1 class="text-2xl sm:text-3xl font-bold mb-2" style="color: var(--theme-text);">Blog</h1>
+        <p class="text-sm sm:text-base mb-6" style="color: var(--theme-text-muted);">News and updates from our Substack newsletter.</p>
+
+        {% if not has_substack %}
+            <div class="rounded-xl p-6 text-center" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+                <p style="color: var(--theme-text-muted);">No blog feed configured yet. Check back soon.</p>
+            </div>
+        {% else %}
+            {# Month/Year in-page navigation bar #}
+            {% if nav_items %}
+            <nav class="sticky top-0 z-10 -mx-4 px-4 py-3 mb-6 overflow-x-auto flex gap-2 flex-nowrap" style="background: var(--theme-bg); border-bottom: 1px solid var(--theme-border);">
+                {% for item in nav_items %}
+                <a href="#{{ item.slug }}" class="shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-opacity hover:opacity-80" style="background: var(--theme-bg-card); color: var(--theme-text-muted); border: 1px solid var(--theme-border);">
+                    {{ item.label }}
+                </a>
+                {% endfor %}
+            </nav>
+            {% endif %}
+
+            {# Journal component: scrollable list of posts grouped by month/year #}
+            <div class="space-y-10">
+                {% for group in groups %}
+                <section id="{{ group.slug }}" class="scroll-mt-24">
+                    <h2 class="text-lg font-semibold mb-4 pb-2" style="color: var(--theme-text); border-bottom: 1px solid var(--theme-border);">
+                        {{ group.month_name }} {{ group.year }}
+                    </h2>
+                    <ul class="space-y-4">
+                        {% for post in group.posts %}
+                        <li>
+                            <article class="rounded-xl p-4 sm:p-5 transition-opacity hover:opacity-90" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+                                <a href="{{ post.link }}" target="_blank" rel="noopener noreferrer" class="block">
+                                    <h3 class="text-base sm:text-lg font-semibold mb-1" style="color: var(--theme-text);">{{ post.title }}</h3>
+                                    <time class="text-xs sm:text-sm block mb-2" style="color: var(--theme-text-muted);" datetime="{{ post.published|date:'c' }}">
+                                        {{ post.published|date:"F j, Y" }}
+                                    </time>
+                                    {% if post.description %}
+                                    <p class="text-sm line-clamp-2" style="color: var(--theme-text-muted);">{{ post.description }}</p>
+                                    {% endif %}
+                                </a>
+                            </article>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </section>
+                {% empty %}
+                <div class="rounded-xl p-6 text-center" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+                    <p style="color: var(--theme-text-muted);">No posts yet.</p>
+                    <a href="{{ site_settings.substack_publication_url }}" target="_blank" rel="noopener noreferrer" class="inline-block mt-3 text-sm font-medium" style="color: var(--theme-accent);">Visit our Substack →</a>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

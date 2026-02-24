@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { getSupabaseClient } from "@/lib/supabase/get-client";
-import { ProductCard } from "@/components/ProductCard";
-import { ShopSearch } from "@/components/ShopSearch";
+import { ProductGrid } from "@/components/organisms/ProductGrid";
+import { ShopSearch } from "@/components/molecules/ShopSearch";
+import { EmptyState } from "@/components/molecules/EmptyState";
+import { Pagination } from "@/components/molecules/Pagination";
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -50,50 +52,22 @@ async function ShopContent({
 
   const totalPages = count ? Math.ceil(count / PRODUCTS_PER_PAGE) : 0;
 
+  const searchParams: Record<string, string> = {};
+  if (search) searchParams.search = search;
+
   return (
     <div className="space-y-8">
       {products?.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--border)] px-8 py-16 text-center text-[var(--muted)]">
-          No products found.
-        </div>
+        <EmptyState title="No products found." />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
-            {products?.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2">
-              {pageNum > 1 && (
-                <a
-                  href={
-                    search
-                      ? `/shop?search=${encodeURIComponent(search)}&page=${pageNum - 1}`
-                      : `/shop?page=${pageNum - 1}`
-                  }
-                  className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm hover:bg-[var(--border)]"
-                >
-                  Previous
-                </a>
-              )}
-              <span className="flex items-center px-4 py-2 text-sm text-[var(--muted)]">
-                Page {pageNum} of {totalPages}
-              </span>
-              {pageNum < totalPages && (
-                <a
-                  href={
-                    search
-                      ? `/shop?search=${encodeURIComponent(search)}&page=${pageNum + 1}`
-                      : `/shop?page=${pageNum + 1}`
-                  }
-                  className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm hover:bg-[var(--border)]"
-                >
-                  Next
-                </a>
-              )}
-            </div>
-          )}
+          <ProductGrid products={products ?? []} />
+          <Pagination
+            currentPage={pageNum}
+            totalPages={totalPages}
+            basePath="/shop"
+            searchParams={searchParams}
+          />
         </>
       )}
     </div>
@@ -108,7 +82,7 @@ export default async function ShopPage({
   const params = await searchParams;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
+    <div className="mx-auto max-w-6xl w-full px-4 py-12">
       <h1 className="mb-8 text-2xl font-semibold text-[var(--foreground)]">
         Shop
       </h1>

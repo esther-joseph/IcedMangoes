@@ -82,9 +82,9 @@
                 <button type="submit" class="mt-2 px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-accent); color: white;">Save</button>
             </form>
             <div class="space-y-4">
-                {% include "store/components/business/integration_card.html" with provider="shippo" provider_label="Shippo" env_var="SHIPPO_API_TOKEN" description="Shippo provides shipping rates and labels for major carriers." provider_status=providers_info.shippo.status env_configured=providers_info.shippo.env_configured %}
-                {% include "store/components/business/integration_card.html" with provider="easypost" provider_label="EasyPost" env_var="EASYPOST_API_KEY" description="EasyPost consolidates carriers and simplifies label creation." provider_status=providers_info.easypost.status env_configured=providers_info.easypost.env_configured %}
-                {% include "store/components/business/integration_none_manual.html" %}
+                {% include "store/components/organisms/business/integration_card.html" with provider="shippo" provider_label="Shippo" env_var="SHIPPO_API_TOKEN" description="Shippo provides shipping rates and labels for major carriers." provider_status=providers_info.shippo.status env_configured=providers_info.shippo.env_configured %}
+                {% include "store/components/organisms/business/integration_card.html" with provider="easypost" provider_label="EasyPost" env_var="EASYPOST_API_KEY" description="EasyPost consolidates carriers and simplifies label creation." provider_status=providers_info.easypost.status env_configured=providers_info.easypost.env_configured %}
+                {% include "store/components/organisms/business/integration_none_manual.html" %}
             </div>
         </section>
         {% endif %}
@@ -108,10 +108,10 @@
                 <button type="submit" class="mt-2 px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-accent); color: white;">Save</button>
             </form>
             <div class="space-y-4">
-                {% include "store/components/business/integration_card.html" with provider="printful" provider_label="Printful" env_var="PRINTFUL_API_KEY" description="Printful handles print and fulfillment for apparel, posters, and more." provider_status=providers_info.printful.status env_configured=providers_info.printful.env_configured %}
-                {% include "store/components/business/integration_card.html" with provider="printify" provider_label="Printify" env_var="PRINTIFY_API_KEY" description="Printify connects you to print providers worldwide." provider_status=providers_info.printify.status env_configured=providers_info.printify.env_configured %}
-                {% include "store/components/business/integration_card.html" with provider="gelato" provider_label="Gelato" env_var="GELATO_API_KEY" description="Gelato offers global print and delivery." provider_status=providers_info.gelato.status env_configured=providers_info.gelato.env_configured %}
-                {% include "store/components/business/integration_none_pod.html" %}
+                {% include "store/components/organisms/business/integration_card.html" with provider="printful" provider_label="Printful" env_var="PRINTFUL_API_KEY" description="Printful handles print and fulfillment for apparel, posters, and more." provider_status=providers_info.printful.status env_configured=providers_info.printful.env_configured %}
+                {% include "store/components/organisms/business/integration_card.html" with provider="printify" provider_label="Printify" env_var="PRINTIFY_API_KEY" description="Printify connects you to print providers worldwide." provider_status=providers_info.printify.status env_configured=providers_info.printify.env_configured %}
+                {% include "store/components/organisms/business/integration_card.html" with provider="gelato" provider_label="Gelato" env_var="GELATO_API_KEY" description="Gelato offers global print and delivery." provider_status=providers_info.gelato.status env_configured=providers_info.gelato.env_configured %}
+                {% include "store/components/organisms/business/integration_none_pod.html" %}
             </div>
         </section>
         {% endif %}

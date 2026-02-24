@@ -129,6 +129,10 @@ class SiteSettings(models.Model):
     tagline = models.CharField(max_length=200, default="Discover and collect artworks")
     stripe_publishable_key = models.CharField(max_length=255, blank=True)
     stripe_secret_key = models.CharField(max_length=255, blank=True)
+    substack_publication_url = models.CharField(
+        max_length=255, blank=True,
+        help_text="Substack publication URL (e.g. https://yourname.substack.com) for blog feed"
+    )
 
     class Meta:
         verbose_name_plural = "Site settings"

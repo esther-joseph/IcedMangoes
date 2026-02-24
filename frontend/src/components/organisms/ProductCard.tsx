@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductImage } from "@/components/atoms/ProductImage";
 
 interface ProductCardProps {
   product: {
@@ -16,18 +17,14 @@ export function ProductCard({ product }: ProductCardProps) {
       href={`/product/${product.id}`}
       className="group block overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card-bg)] transition hover:border-[var(--accent)]"
     >
-      <div className="aspect-square overflow-hidden bg-[var(--border)]">
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.title}
-            className="h-full w-full object-cover transition group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-[var(--muted)]">
-            No image
-          </div>
-        )}
+      <div className="relative aspect-square overflow-hidden bg-[var(--border)]">
+        <ProductImage
+          src={product.image_url}
+          alt={product.title}
+          fill
+          sizes="(max-width: 768px) 50vw, 25vw"
+          className="object-cover transition duration-300 group-hover:scale-105"
+        />
       </div>
       <div className="p-4">
         <h3 className="line-clamp-2 font-medium text-[var(--foreground)]">

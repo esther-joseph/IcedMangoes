@@ -1,0 +1,49 @@
+{% load static %}
+{# Organism: Sidebar navigation #}
+<nav class="flex flex-col p-4 gap-1 flex-1 min-h-0" style="color: var(--theme-text);">
+    <a href="{% url 'index' %}" class="font-semibold py-2 px-3 rounded-lg hover:opacity-80" style="color: var(--theme-text);">{{ site_settings.site_name|default:"Artist Store" }}</a>
+    <a href="{% url 'index' %}" class="text-sm py-2 px-3 rounded-lg hover:opacity-80" style="color: var(--theme-text-muted);">Gallery</a>
+    <a href="{% url 'blog' %}" class="text-sm py-2 px-3 rounded-lg hover:opacity-80" style="color: var(--theme-text-muted);">Blog</a>
+    {% if is_user %}
+        <a href="{% url 'orders_list' %}" class="text-sm py-2 px-3 rounded-lg hover:opacity-80" style="color: var(--theme-text-muted);">Past Orders</a>
+    {% endif %}
+    {% if is_admin %}
+        <a href="{% url 'store_admin' %}" class="text-sm py-2 px-3 rounded-lg hover:opacity-80" style="color: var(--theme-accent);">Admin Panel</a>
+        <a href="{% url 'business' %}" class="text-sm py-2 px-3 rounded-lg hover:opacity-80" style="color: var(--theme-text-muted);">Business</a>
+    {% endif %}
+    <a href="{% url 'profile' %}" class="text-sm py-2 px-3 rounded-lg hover:opacity-80" style="color: var(--theme-text-muted);">Profile</a>
+    {% if is_public %}
+        <a href="{% url 'login' %}" class="text-sm py-2 px-3 rounded-lg hover:opacity-80" style="color: var(--theme-text-muted);">Login</a>
+    {% endif %}
+    {% if is_user or is_admin %}
+        <a href="{% url 'logout' %}" class="text-sm py-2 px-3 rounded-lg hover:opacity-80 mt-auto" style="color: var(--theme-text-muted);">Logout</a>
+    {% endif %}
+    <div class="flex flex-col gap-2 mt-4 pt-4 border-t" style="border-color: var(--theme-border);">
+        {% if show_add_artwork %}
+            {% include "store/components/atoms/button_add_artwork.html" %}
+        {% endif %}
+        {% include "store/components/molecules/cart_button.html" %}
+    </div>
+
+    {# Testing toggle: view as admin vs guest #}
+    <div class="mt-4 pt-4 border-t" style="border-color: var(--theme-border);">
+        <p class="text-xs mb-2" style="color: var(--theme-text-muted);">View as (test)</p>
+        <div class="flex flex-wrap gap-1">
+            <button type="button" class="view-as-btn px-2 py-1 rounded text-xs font-medium" data-view="admin" aria-pressed="{% if view_as_override == 'admin' %}true{% else %}false{% endif %}" style="{% if view_as_override == 'admin' %}background: var(--theme-accent); color: white;{% else %}background: var(--theme-border); color: var(--theme-text);{% endif %}">Admin</button>
+            <button type="button" class="view-as-btn px-2 py-1 rounded text-xs font-medium" data-view="guest" aria-pressed="{% if view_as_override == 'guest' %}true{% else %}false{% endif %}" style="{% if view_as_override == 'guest' %}background: var(--theme-accent); color: white;{% else %}background: var(--theme-border); color: var(--theme-text);{% endif %}">Guest</button>
+            <button type="button" class="view-as-btn px-2 py-1 rounded text-xs font-medium" data-view="" aria-pressed="{% if not view_as_override %}true{% else %}false{% endif %}" style="{% if not view_as_override %}background: var(--theme-accent); color: white;{% else %}background: var(--theme-border); color: var(--theme-text);{% endif %}">Reset</button>
+        </div>
+    </div>
+</nav>
+<script>
+(function() {
+  document.querySelectorAll('.view-as-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var view = btn.dataset.view || '';
+      var maxAge = view ? 'max-age=86400' : 'max-age=0';
+      document.cookie = 'view_as_test=' + view + '; path=/; ' + maxAge + '; SameSite=Lax';
+      location.reload();
+    });
+  });
+})();
+</script>

@@ -1,4 +1,4 @@
-{# Theme switcher dropdown - vanilla JS, no framework #}
+{# Molecule: Theme dropdown switcher #}
 <div class="theme-switcher relative">
   <button
     type="button"
@@ -34,7 +34,6 @@
   var STORAGE_KEY = 'artist-store-theme';
   var toggle = document.getElementById('theme-toggle');
   var menu = document.getElementById('theme-menu');
-
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem(STORAGE_KEY, theme);
@@ -46,7 +45,6 @@
     }
     menu.classList.add('hidden');
   }
-
   function init() {
     var saved = localStorage.getItem(STORAGE_KEY) || 'cute-beige';
     document.documentElement.setAttribute('data-theme', saved);
@@ -54,10 +52,7 @@
     var dot = document.querySelector('.theme-preview-dot');
     if (dot) { dot.style.background = colors[saved]; dot.style.borderColor = colors[saved]; }
   }
-
-  toggle && toggle.addEventListener('click', function() {
-    menu.classList.toggle('hidden');
-  });
+  toggle && toggle.addEventListener('click', function() { menu.classList.toggle('hidden'); });
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.theme-switcher')) menu.classList.add('hidden');
   });

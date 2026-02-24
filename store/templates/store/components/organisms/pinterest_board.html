@@ -1,0 +1,7 @@
+{# Organism: Pinterest-style masonry artwork grid #}
+{# Usage: {% include "store/components/organisms/pinterest_board.html" with artworks=artworks %} #}
+<div class="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 px-4">
+    {% for art in artworks %}
+        {% include "store/components/organisms/artwork_card.html" with art=art %}
+    {% endfor %}
+</div>

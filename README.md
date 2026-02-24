@@ -1,8 +1,43 @@
 # IcedMangoes
 
-A backend architecture showcase demonstrating clean architecture, service-layer design, and production-oriented practices.
+A backend architecture showcase and artist storefront template demonstrating clean architecture, service-layer design, and production-oriented practices.
 
-**Documentation**: [documentation/README.md](documentation/README.md) – wiki with setup, tech stack, and API guides. **New?** Start with [Installation & Deployment](documentation/installation-and-deployment.md). Built with Django and MongoDB to model a storefront domain suitable for iterative schema evolution.
+**Documentation**: [documentation/README.md](documentation/README.md) – wiki with setup, tech stack, and API guides. **New?** Start with [Installation & Deployment](documentation/installation-and-deployment.md).
+
+---
+
+## Recent Updates & Features
+
+### Django Store
+
+- **Responsive design** — Mobile-first layout with collapsible sidebar (hamburger menu), touch-friendly controls, and viewport meta
+- **Blog page** — Substack RSS integration at `/blog/` with a journal-style list of posts
+- **Admin Substack config** — Staff can set the Substack publication URL in Profile; posts appear on the Blog page
+- **Month/year navigation** — In-page navigation bar to jump between blog post sections by publication date
+- **Atomic design** — Components organized into `atoms/`, `molecules/`, `organisms/` (see [documentation/ATOMIC_DESIGN.md](documentation/ATOMIC_DESIGN.md))
+- **Admin/Guest toggle** — Testing toggle at bottom of sidebar to preview nav as admin or guest
+- **Profile for all users** — Profile page accessible to both admin and guest; same layout with role-appropriate data and actions (admin-only forms disabled for guests)
+
+### Next.js Frontend
+
+- **Atomic design** — Reusable component hierarchy: atoms (Badge, Button, Input, ProductImage), molecules (Hero, EmptyState, Pagination, CartItem, ShopSearch, etc.), organisms (Navbar, ProductCard, ProductGrid), templates (PageLayout)
+- **next/image** — Product images via `ProductImage` with remote patterns for Supabase
+- **Link-based pagination** — Shop uses `next/link` for pagination (no `<a>` tags)
+- **Shared layout** — `PageLayout` template for consistent page containers
+- **Component docs** — [frontend/COMPONENTS.md](frontend/COMPONENTS.md) documents structure and server vs client components
+
+### Architecture
+
+- **Remediation plan** — [documentation/architecture-remediation-plan.md](documentation/architecture-remediation-plan.md) outlines dual-stack consolidation and system design improvements
+
+---
+
+## Two Deployment Paths
+
+| Path | Stack | Best for |
+|------|-------|----------|
+| **Django Backend** | Django, MongoDB/SQLite, Tailwind, Stripe | Full control, GraphQL API, cart/checkout, fulfillment |
+| **Next.js Frontend** | Next.js, Supabase, Vercel | Minimal setup, no Docker, deploy in minutes |
 
 ---
 
@@ -20,7 +55,7 @@ The `/frontend` directory contains a **Next.js (App Router) + Supabase** storefr
 
 - **Deploy to Vercel** in a few clicks
 - **Supabase** provides database + storage (single provider)
-- **Stripe** will be added in Phase 2
+- **Stripe** checkout integrated
 - No Docker required
 
 ### Quick start (local)
@@ -41,7 +76,10 @@ Open [http://localhost:3000](http://localhost:3000).
 |----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon (public) key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-only; for admin operations |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only; for webhook order creation |
+| `STRIPE_SECRET_KEY` | Stripe secret key (checkout) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
 | `ADMIN_EMAILS` | Comma-separated emails for /business (Phase 3) |
 
 ### Supabase setup
@@ -59,6 +97,8 @@ Open [http://localhost:3000](http://localhost:3000).
 4. Add the environment variables above
 5. Deploy
 
+See [frontend/README.md](frontend/README.md) and [documentation/frontend-vercel-supabase.md](documentation/frontend-vercel-supabase.md) for details.
+
 ---
 
 ## 1. Project Overview
@@ -68,6 +108,8 @@ IcedMangoes implements a storefront API and presentation layer for an artist mar
 ---
 
 ## 2. Tech Stack
+
+### Django backend (store root)
 
 | Layer | Technology |
 |-------|------------|
@@ -80,6 +122,17 @@ IcedMangoes implements a storefront API and presentation layer for an artist mar
 | Frontend | Tailwind CSS, PostCSS, CSS custom properties (theme switching) |
 | Build | Node.js, npm (for CSS) |
 | Orchestration | Docker Compose |
+
+### Next.js frontend (`/frontend`)
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16 (App Router) |
+| Database | Supabase (PostgreSQL) |
+| Storage | Supabase Storage (media bucket) |
+| Payments | Stripe Checkout |
+| Hosting | Vercel |
+| Styling | Tailwind CSS 4 |
 
 ---
 
@@ -176,7 +229,9 @@ mutation {
 **Endpoints**:
 
 - Application: http://localhost:8000
+- Blog: http://localhost:8000/blog/ — Substack feed with month/year navigation
 - Business (admin): http://localhost:8000/business/ — fulfillment configuration, provider integrations
+- Profile: http://localhost:8000/profile/ — dashboard (admin), or layout preview (guest)
 - GraphQL (GraphiQL): http://localhost:8000/graphql/
 - Mongo Express: http://localhost:8081 (Docker only)
 
@@ -240,6 +295,7 @@ Users are solely responsible for ensuring compliance with all applicable laws, i
 
 Before deploying your store:
 
+- [ ] Configure Stripe keys — see [Stripe Setup](documentation/stripe-setup.md)
 - [ ] Decide your protection workflow (Glaze / WebGlaze / Nightshade) — see [Protecting Artwork](documentation/ART_PROTECTION.md)
 - [ ] Keep original masters private; never upload them to the web
 - [ ] Upload web-optimized protected images only

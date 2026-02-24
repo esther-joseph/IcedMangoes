@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase/get-client";
+import { AddToCartButton } from "@/components/molecules/AddToCartButton";
+import { ProductImage } from "@/components/atoms/ProductImage";
+import { PageLayout } from "@/components/templates/PageLayout";
 
 export default async function ProductPage({
   params,
@@ -32,20 +35,15 @@ export default async function ProductPage({
   const tags = (product.tags as string[] | null) ?? [];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12">
+    <PageLayout maxWidth="lg">
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="aspect-square overflow-hidden rounded-xl bg-[var(--border)]">
-          {product.image_url ? (
-            <img
-              src={product.image_url}
-              alt={product.title}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-[var(--muted)]">
-              No image
-            </div>
-          )}
+        <div className="relative aspect-square overflow-hidden rounded-xl bg-[var(--border)]">
+          <ProductImage
+            src={product.image_url}
+            alt={product.title}
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
         </div>
         <div>
           <Link
@@ -78,11 +76,16 @@ export default async function ProductPage({
               ))}
             </div>
           )}
-          <p className="mt-6 text-sm text-[var(--muted)]">
-            Stripe checkout coming in Phase 2.
-          </p>
+          <div className="mt-6">
+            <AddToCartButton
+              productId={product.id}
+              title={product.title}
+              price={Number(product.price)}
+              imageUrl={product.image_url ?? undefined}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

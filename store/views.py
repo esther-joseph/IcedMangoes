@@ -38,6 +38,7 @@ from .fulfillment_service import (
 )
 from .models import Artwork, Order, OrderItem, SiteSettings
 from .services import ArtworkService, ArtworkServiceProtocol
+from .substack import fetch_substack_feed, SubstackPost
 
 
 def index(
@@ -315,45 +316,57 @@ def admin_artwork_delete(request: HttpRequest, artwork_id: int) -> HttpResponse:
 
 
 def profile(request: HttpRequest) -> HttpResponse:
-    """Admin profile dashboard."""
-    if not request.user.is_authenticated or not request.user.is_staff:
-        return redirect("index")
-
-    now = timezone.now()
-    orders = Order.objects.all().order_by("-created_at")
-
-    # Orders by month for chart (last 6 months)
+    """Profile dashboard. Admin sees full data; guest sees same layout with empty/placeholder data."""
     from calendar import monthrange
 
-    month_counts = {}
-    for i in range(5, -1, -1):
-        y, m = now.year, now.month
-        m -= i
-        while m <= 0:
-            m += 12
-            y -= 1
-        month_start = timezone.make_aware(datetime(y, m, 1))
-        last_day = monthrange(y, m)[1]
-        month_end = timezone.make_aware(datetime(y, m, last_day, 23, 59, 59)) + timedelta(seconds=1)
-        month_counts[month_start.strftime("%b %Y")] = orders.filter(
-            created_at__gte=month_start, created_at__lt=month_end
-        ).count()
-    chart_labels = list(month_counts.keys())
-    chart_data = list(month_counts.values())
+    now = timezone.now()
+    is_staff = request.user.is_authenticated and request.user.is_staff
 
-    # Popular tags from sold artworks
-    tag_counts = Counter()
-    for oi in OrderItem.objects.select_related("artwork"):
-        if oi.artwork.tags:
-            for t in oi.artwork.tags.replace(",", " ").split():
-                tag_counts[t.strip().lower()] += 1
-    popular_tags = tag_counts.most_common(10)
+    if is_staff:
+        orders = Order.objects.all().order_by("-created_at")
+        month_counts = {}
+        for i in range(5, -1, -1):
+            y, m = now.year, now.month
+            m -= i
+            while m <= 0:
+                m += 12
+                y -= 1
+            month_start = timezone.make_aware(datetime(y, m, 1))
+            last_day = monthrange(y, m)[1]
+            month_end = timezone.make_aware(datetime(y, m, last_day, 23, 59, 59)) + timedelta(seconds=1)
+            month_counts[month_start.strftime("%b %Y")] = orders.filter(
+                created_at__gte=month_start, created_at__lt=month_end
+            ).count()
+        chart_labels = list(month_counts.keys())
+        chart_data = list(month_counts.values())
 
-    User = get_user_model()
-    users = User.objects.all().order_by("-date_joined")[:50]
+        tag_counts = Counter()
+        for oi in OrderItem.objects.select_related("artwork"):
+            if oi.artwork.tags:
+                for t in oi.artwork.tags.replace(",", " ").split():
+                    tag_counts[t.strip().lower()] += 1
+        popular_tags = tag_counts.most_common(10)
+
+        User = get_user_model()
+        users = User.objects.all().order_by("-date_joined")[:50]
+    else:
+        # Guest: empty data for same layout (last 6 months labels)
+        month_counts_guest = {}
+        for i in range(5, -1, -1):
+            y, m = now.year, now.month
+            m -= i
+            while m <= 0:
+                m += 12
+                y -= 1
+            month_counts_guest[timezone.make_aware(datetime(y, m, 1)).strftime("%b %Y")] = 0
+        chart_labels = list(month_counts_guest.keys())
+        chart_data = [0] * 6
+        popular_tags = []
+        orders = []
+        users = []
 
     ctx = {
-        "orders": orders[:50],
+        "orders": list(orders[:50]) if is_staff else [],
         "chart_labels": json.dumps(chart_labels),
         "chart_data": json.dumps(chart_data),
         "popular_tags_labels": json.dumps([t[0] for t in popular_tags]),
@@ -370,6 +383,55 @@ def profile_substack_post(request: HttpRequest) -> HttpResponse:
         return redirect("profile")
     # Placeholder - Substack API would go here
     return redirect("profile")
+
+
+@require_POST
+def profile_substack_settings(request: HttpRequest) -> HttpResponse:
+    """Save Substack publication URL (admin only)."""
+    if not request.user.is_staff:
+        return redirect("profile")
+    url = request.POST.get("substack_publication_url", "").strip()
+    site = SiteSettings.get()
+    site.substack_publication_url = url[:255] if url else ""
+    site.save()
+    return redirect("profile")
+
+
+def blog(request: HttpRequest) -> HttpResponse:
+    """Public blog page: list of Substack posts with month/year navigation."""
+    site = SiteSettings.get()
+    publication_url = (site.substack_publication_url or "").strip()
+    posts: list[SubstackPost] = []
+    if publication_url:
+        posts = fetch_substack_feed(publication_url)
+
+    # Group posts by (year, month) for journal nav
+    from collections import OrderedDict
+
+    groups: OrderedDict[tuple[int, int], list[SubstackPost]] = OrderedDict()
+    for p in posts:
+        key = (p.published.year, p.published.month)
+        if key not in groups:
+            groups[key] = []
+        groups[key].append(p)
+
+    month_names = [
+        "", "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
+    ]
+    nav_items = [{"year": y, "month": m, "label": f"{month_names[m]} {y}", "slug": f"y{y}m{m}"} for (y, m) in groups.keys()]
+    groups_list = [
+        {"year": y, "month": m, "month_name": month_names[m], "slug": f"y{y}m{m}", "posts": group_posts}
+        for (y, m), group_posts in groups.items()
+    ]
+
+    ctx = {
+        "posts": posts,
+        "groups": groups_list,
+        "nav_items": nav_items,
+        "has_substack": bool(publication_url),
+    }
+    return render(request, "store/blog.html", ctx)
 
 
 def profile_send_email(request: HttpRequest) -> HttpResponse:
