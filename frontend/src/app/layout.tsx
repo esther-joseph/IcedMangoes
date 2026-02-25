@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CartProvider } from "@/contexts/CartContext";
-import { Navbar } from "@/components/organisms/Navbar";
+import { SidebarLayout } from "@/components/templates/SidebarLayout";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,8 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen antialiased">
         <CartProvider>
-          <Navbar />
-          {children}
+          <SidebarLayout>{children}</SidebarLayout>
         </CartProvider>
       </body>
     </html>

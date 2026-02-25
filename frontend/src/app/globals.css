@@ -1,13 +1,24 @@
 @import "tailwindcss";
 
-:root {
-  --background: #fafaf9;
-  --foreground: #1c1917;
-  --accent: #78716c;
-  --accent-hover: #57534e;
-  --border: #e7e5e4;
-  --muted: #a8a29e;
-  --card-bg: #ffffff;
+/* Django-aligned theme: cute-beige default (matches store/themes.css) */
+:root,
+[data-theme="cute-beige"] {
+  --theme-bg: #f5f0e8;
+  --theme-bg-card: #faf8f4;
+  --theme-bg-header: rgba(250, 248, 244, 0.95);
+  --theme-text: #3d3730;
+  --theme-text-muted: #6b6359;
+  --theme-accent: #c4a77d;
+  --theme-border: #e0d8cc;
+  --theme-shadow: rgba(61, 55, 48, 0.08);
+  /* Next.js var mapping */
+  --background: var(--theme-bg);
+  --foreground: var(--theme-text);
+  --accent: var(--theme-accent);
+  --accent-hover: #b3946a;
+  --border: var(--theme-border);
+  --muted: var(--theme-text-muted);
+  --card-bg: var(--theme-bg-card);
 }
 
 @theme inline {
@@ -21,20 +32,8 @@
   --font-mono: ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0a09;
-    --foreground: #fafaf9;
-    --accent: #a8a29e;
-    --accent-hover: #d6d3d1;
-    --border: #292524;
-    --muted: #78716c;
-    --card-bg: #1c1917;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--theme-bg);
+  color: var(--theme-text);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
