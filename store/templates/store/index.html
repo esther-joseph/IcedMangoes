@@ -1,18 +1,22 @@
-<!DOCTYPE html>
-<html>
-<head><title>Artist Store</title></head>
-<body>
-    <h1>Available Artworks</h1>
-    <ul>
-        {% for art in artworks %}
-        <li>
-            <h2>{{ art.title }}</h2>
-            <img src="{{ art.image.url }}" width="200" />
-            <p>{{ art.description }}</p>
-            <p>Price: ${{ art.price }}</p>
-            <p>Artist: {{ art.artist.name }}</p>
-        </li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+{% extends "store/base.html" %}
+
+{% block title %}{{ site_settings.site_name|default:"Artist Store" }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen" style="background: var(--theme-bg);">
+    <div class="container mx-auto py-8 px-4">
+        <p class="text-sm mb-4" style="color: var(--theme-text-muted);">{{ site_settings.tagline|default:"Discover and collect artworks" }}</p>
+        {% if artworks %}
+            {% include "store/components/organisms/pinterest_board.html" with artworks=artworks %}
+            {% include "store/components/organisms/artwork_detail_modal.html" %}
+        {% else %}
+            <div class="flex flex-col items-center justify-center py-24 px-4">
+                <p class="text-center" style="color: var(--theme-text-muted);">No artworks available at this time.</p>
+            </div>
+        {% endif %}
+    </div>
+    {% if show_add_artwork %}
+        {% include "store/components/organisms/add_artwork_modal.html" %}
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% load static %}
+{# Artwork card - click opens detail modal; data attributes used by modal script #}
+<article class="artwork-card group break-inside-avoid mb-4 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+  style="background: var(--theme-bg-card); box-shadow: 0 4px 6px -1px var(--theme-shadow), 0 2px 4px -2px var(--theme-shadow);"
+  data-artwork-id="{{ art.id }}"
+  data-title="{{ art.title|escapejs }}"
+  data-description="{{ art.description|escapejs }}"
+  data-artist="{{ art.artist.name|escapejs }}"
+  data-image-url="{% if art.image %}{{ art.image.url }}{% endif %}"
+  data-extra-images="[{% for img in art.artworkimage_set.all %}{&quot;url&quot;:&quot;{{ img.image.url }}&quot;,&quot;label&quot;:&quot;&quot;}{% if not forloop.last %},{% endif %}{% endfor %}]"
+  data-price="{{ art.price }}"
+  data-products="[{% for p in art.artworkproduct_set.all %}{&quot;id&quot;:{{ p.id }},&quot;name&quot;:&quot;{{ p.name|escapejs }}&quot;,&quot;price&quot;:&quot;{{ p.price }}&quot;}{% if not forloop.last %},{% endif %}{% endfor %}]"
+>
+  <div class="block">
+    {% if art.image %}
+      <div class="relative overflow-hidden">
+        <img src="{{ art.image.url }}" alt="{{ art.title }}" class="w-full object-cover transition-transform duration-300 group-hover:scale-105">
+      </div>
+    {% else %}
+      <div class="aspect-square flex items-center justify-center" style="background: var(--theme-border);">
+        <span class="text-sm" style="color: var(--theme-text-muted);">No image</span>
+      </div>
+    {% endif %}
+    <div class="p-4">
+      <h3 class="font-semibold line-clamp-2" style="color: var(--theme-text);">{{ art.title }}</h3>
+      <p class="mt-1 text-sm" style="color: var(--theme-text-muted);">{{ art.artist.name }}</p>
+      <p class="mt-2 text-sm line-clamp-2" style="color: var(--theme-text); opacity: 0.9;">{{ art.description }}</p>
+      {% if art.tags %}<p class="mt-1 text-xs" style="color: var(--theme-text-muted);">{{ art.tags }}</p>{% endif %}
+      <div class="mt-2 flex items-center justify-between gap-2">
+        <span class="font-semibold" style="color: var(--theme-accent);">From ${{ art.price }}</span>
+        <span class="text-xs" style="color: var(--theme-text-muted);">View details →</span>
+      </div>
+    </div>
+  </div>
+</article>

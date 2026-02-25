@@ -1,0 +1,64 @@
+{# Molecule: Theme dropdown switcher #}
+<div class="theme-switcher relative">
+  <button
+    type="button"
+    id="theme-toggle"
+    class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+    style="background: var(--theme-border); color: var(--theme-text);"
+    aria-expanded="false"
+    aria-haspopup="listbox"
+    aria-label="Choose theme"
+  >
+    <span class="w-4 h-4 rounded-full border-2 shrink-0 theme-preview-dot" style="background: var(--theme-accent); border-color: var(--theme-accent);"></span>
+    <span>Theme</span>
+    <svg class="w-4 h-4 transition-transform theme-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+  <div
+    id="theme-menu"
+    class="theme-menu absolute right-0 mt-2 w-48 rounded-lg shadow-lg py-1 hidden"
+    style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);"
+  >
+    <button type="button" data-theme="cute-beige" class="theme-option w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity" style="color: var(--theme-text);"><span class="w-3 h-3 rounded-full shrink-0" style="background:#c4a77d"></span>Cute Beige</button>
+    <button type="button" data-theme="lavender" class="theme-option w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity" style="color: var(--theme-text);"><span class="w-3 h-3 rounded-full shrink-0" style="background:#9b8bb8"></span>Lavender</button>
+    <button type="button" data-theme="baby-blue" class="theme-option w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity" style="color: var(--theme-text);"><span class="w-3 h-3 rounded-full shrink-0" style="background:#7ba3c9"></span>Baby Blue</button>
+    <button type="button" data-theme="peach-pink" class="theme-option w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity" style="color: var(--theme-text);"><span class="w-3 h-3 rounded-full shrink-0" style="background:#e8a598"></span>Peach Pink</button>
+    <button type="button" data-theme="slate-gray" class="theme-option w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity" style="color: var(--theme-text);"><span class="w-3 h-3 rounded-full shrink-0" style="background:#64748b"></span>Slate Gray</button>
+    <button type="button" data-theme="mint-green" class="theme-option w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity" style="color: var(--theme-text);"><span class="w-3 h-3 rounded-full shrink-0" style="background:#6fb996"></span>Mint Green</button>
+    <button type="button" data-theme="coral-red" class="theme-option w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity" style="color: var(--theme-text);"><span class="w-3 h-3 rounded-full shrink-0" style="background:#e07a6b"></span>Coral Red</button>
+  </div>
+</div>
+<script>
+(function() {
+  var STORAGE_KEY = 'artist-store-theme';
+  var toggle = document.getElementById('theme-toggle');
+  var menu = document.getElementById('theme-menu');
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem(STORAGE_KEY, theme);
+    var dot = document.querySelector('.theme-preview-dot');
+    if (dot) {
+      var colors = { 'cute-beige':'#c4a77d', 'lavender':'#9b8bb8', 'baby-blue':'#7ba3c9', 'peach-pink':'#e8a598', 'slate-gray':'#64748b', 'mint-green':'#6fb996', 'coral-red':'#e07a6b' };
+      dot.style.background = colors[theme] || colors['cute-beige'];
+      dot.style.borderColor = colors[theme] || colors['cute-beige'];
+    }
+    menu.classList.add('hidden');
+  }
+  function init() {
+    var saved = localStorage.getItem(STORAGE_KEY) || 'cute-beige';
+    document.documentElement.setAttribute('data-theme', saved);
+    var colors = { 'cute-beige':'#c4a77d', 'lavender':'#9b8bb8', 'baby-blue':'#7ba3c9', 'peach-pink':'#e8a598', 'slate-gray':'#64748b', 'mint-green':'#6fb996', 'coral-red':'#e07a6b' };
+    var dot = document.querySelector('.theme-preview-dot');
+    if (dot) { dot.style.background = colors[saved]; dot.style.borderColor = colors[saved]; }
+  }
+  toggle && toggle.addEventListener('click', function() { menu.classList.toggle('hidden'); });
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.theme-switcher')) menu.classList.add('hidden');
+  });
+  menu && menu.querySelectorAll('.theme-option').forEach(function(btn) {
+    btn.addEventListener('click', function() { applyTheme(btn.dataset.theme); });
+  });
+  init();
+})();
+</script>

@@ -1,0 +1,78 @@
+/* Theme variables – default: cute beige */
+:root,
+[data-theme="cute-beige"] {
+  --theme-bg: #f5f0e8;
+  --theme-bg-card: #faf8f4;
+  --theme-bg-header: rgba(250, 248, 244, 0.95);
+  --theme-text: #3d3730;
+  --theme-text-muted: #6b6359;
+  --theme-accent: #c4a77d;
+  --theme-border: #e0d8cc;
+  --theme-shadow: rgba(61, 55, 48, 0.08);
+}
+
+[data-theme="lavender"] {
+  --theme-bg: #f3eff8;
+  --theme-bg-card: #faf8fc;
+  --theme-bg-header: rgba(250, 248, 252, 0.95);
+  --theme-text: #3d3555;
+  --theme-text-muted: #6b6280;
+  --theme-accent: #9b8bb8;
+  --theme-border: #e4dfed;
+  --theme-shadow: rgba(61, 53, 85, 0.08);
+}
+
+[data-theme="baby-blue"] {
+  --theme-bg: #eef5fb;
+  --theme-bg-card: #f7fafd;
+  --theme-bg-header: rgba(247, 250, 253, 0.95);
+  --theme-text: #2d4059;
+  --theme-text-muted: #5a6f8a;
+  --theme-accent: #7ba3c9;
+  --theme-border: #dce8f2;
+  --theme-shadow: rgba(45, 64, 89, 0.08);
+}
+
+[data-theme="peach-pink"] {
+  --theme-bg: #fdf2ef;
+  --theme-bg-card: #fef8f6;
+  --theme-bg-header: rgba(254, 248, 246, 0.95);
+  --theme-text: #4a3835;
+  --theme-text-muted: #7a6663;
+  --theme-accent: #e8a598;
+  --theme-border: #f0dcd8;
+  --theme-shadow: rgba(74, 56, 53, 0.08);
+}
+
+[data-theme="slate-gray"] {
+  --theme-bg: #eef0f2;
+  --theme-bg-card: #f6f7f9;
+  --theme-bg-header: rgba(246, 247, 249, 0.95);
+  --theme-text: #334155;
+  --theme-text-muted: #64748b;
+  --theme-accent: #64748b;
+  --theme-border: #e2e8f0;
+  --theme-shadow: rgba(51, 65, 85, 0.08);
+}
+
+[data-theme="mint-green"] {
+  --theme-bg: #eff8f4;
+  --theme-bg-card: #f6fcf9;
+  --theme-bg-header: rgba(246, 252, 249, 0.95);
+  --theme-text: #2d4a3e;
+  --theme-text-muted: #5a7a6a;
+  --theme-accent: #6fb996;
+  --theme-border: #d4ebe2;
+  --theme-shadow: rgba(45, 74, 62, 0.08);
+}
+
+[data-theme="coral-red"] {
+  --theme-bg: #fdf4f2;
+  --theme-bg-card: #fef7f5;
+  --theme-bg-header: rgba(254, 247, 245, 0.95);
+  --theme-text: #4a3532;
+  --theme-text-muted: #7a5c58;
+  --theme-accent: #e07a6b;
+  --theme-border: #f0d8d4;
+  --theme-shadow: rgba(74, 53, 50, 0.08);
+}

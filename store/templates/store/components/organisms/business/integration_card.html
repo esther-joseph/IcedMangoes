@@ -1,0 +1,35 @@
+<div class="rounded-lg p-4" style="background: var(--theme-bg); border: 1px solid var(--theme-border);">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex-1 min-w-0">
+            <h3 class="font-medium" style="color: var(--theme-text);">{{ provider_label }}</h3>
+            <p class="text-sm mt-1" style="color: var(--theme-text-muted);">{{ description }}</p>
+            <p class="text-xs mt-1" style="color: var(--theme-text-muted);">Env var: <code>{{ env_var }}</code></p>
+        </div>
+        <div class="flex items-center gap-2">
+            {% if effective_settings.use_env_secrets %}
+                {% if env_configured %}
+                <span class="px-2 py-1 rounded text-xs font-medium" style="background: #22c55e20; color: #22c55e;">Configured</span>
+                {% else %}
+                <span class="px-2 py-1 rounded text-xs font-medium" style="background: #ef444420; color: #ef4444;">Not configured</span>
+                {% endif %}
+            {% else %}
+                {% if provider_status == 'configured' %}
+                <span class="px-2 py-1 rounded text-xs font-medium" style="background: #22c55e20; color: #22c55e;">Configured</span>
+                {% else %}
+                <span class="px-2 py-1 rounded text-xs font-medium" style="background: #ef444420; color: #ef4444;">Not configured</span>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    {% if not effective_settings.use_env_secrets %}
+    <form method="post" action="{% url 'business_provider_save_key' provider=provider %}" class="mt-3 flex gap-2 flex-wrap">
+        {% csrf_token %}
+        <input type="password" name="api_key" placeholder="API key (masked)" autocomplete="off"
+            class="px-3 py-2 rounded border text-sm flex-1 min-w-[200px]" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+        <button type="submit" class="px-3 py-2 rounded text-sm font-medium" style="background: var(--theme-accent); color: white;">Save</button>
+        <button type="button" class="provider-test-btn px-3 py-2 rounded text-sm border" data-provider="{{ provider }}"
+            style="border-color: var(--theme-border); color: var(--theme-text);">Test connection</button>
+    </form>
+    <p class="text-xs mt-2" style="color: #ef4444;">DB-stored keys: local dev only. Not recommended for production.</p>
+    {% endif %}
+</div>

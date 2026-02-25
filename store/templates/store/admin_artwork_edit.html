@@ -1,0 +1,51 @@
+{% extends "store/base.html" %}
+{% block title %}Edit Artwork – {{ site_settings.site_name|default:"Artist Store" }}{% endblock %}
+{% block content %}
+<div class="min-h-screen" style="background: var(--theme-bg);">
+    <div class="container mx-auto py-8 px-4 max-w-2xl">
+        <h1 class="text-2xl font-bold mb-6" style="color: var(--theme-text);">Edit Artwork</h1>
+        {% if artwork.image %}
+            <div class="mb-4">
+                <img src="{{ artwork.image.url }}" alt="{{ artwork.title }}" class="w-24 h-24 rounded-lg object-cover">
+            </div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data" class="space-y-4" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border); padding: 1.5rem; border-radius: 0.75rem;">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Artist name</label>
+                <input type="text" name="artist_name" value="{{ form.artist_name.value }}" required class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Title</label>
+                <input type="text" name="title" value="{{ form.title.value }}" required maxlength="100" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Description</label>
+                <textarea name="description" rows="3" required class="w-full px-3 py-2 rounded-lg border text-sm resize-y" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">{{ form.description.value }}</textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Tags</label>
+                <input type="text" name="tags" value="{{ form.tags.value }}" maxlength="500" placeholder="abstract, oil, landscape" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Price ($)</label>
+                <input type="number" name="price" value="{{ form.price.value }}" step="0.01" min="0" required class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+            </div>
+            <div>
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="available" value="1" {% if form.available.value %}checked{% endif %}>
+                    <span class="text-sm" style="color: var(--theme-text);">Available for sale</span>
+                </label>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Image (leave empty to keep current)</label>
+                <input type="file" name="image" accept="image/*" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);">
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-accent); color: white;">Save</button>
+                <a href="{% url 'store_admin' %}" class="px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-border); color: var(--theme-text);">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

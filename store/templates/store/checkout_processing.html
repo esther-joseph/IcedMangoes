@@ -1,0 +1,35 @@
+{% extends "store/base.html" %}
+{% block title %}Processing – {{ site_settings.site_name|default:"Artist Store" }}{% endblock %}
+{% block content %}
+<div class="min-h-full flex flex-col items-center justify-center px-4 py-8" style="background: var(--theme-bg);">
+        <div class="text-center max-w-md">
+            <p class="text-lg font-medium mb-2" style="color: var(--theme-text);">Processing your order…</p>
+            <p class="text-sm mb-6" style="color: var(--theme-text-muted);">Your payment was successful. Please wait while we confirm your order.</p>
+            <a href="{% url success_redirect %}" class="inline-block px-6 py-3 rounded-lg font-medium" style="background: var(--theme-accent); color: white;">{% if request.user.is_authenticated %}View Orders{% else %}Back to Store{% endif %}</a>
+            <p class="text-xs mt-4" style="color: var(--theme-text-muted);">If your order doesn’t appear yet, refresh in a few seconds.</p>
+        </div>
+</div>
+{% if poll_for_order %}
+<script>
+(function() {
+  var successUrl = "{% url success_redirect %}";
+  var attempts = 0;
+  var maxAttempts = 20;
+  function poll() {
+    if (attempts >= maxAttempts) return;
+    attempts++;
+    fetch(successUrl, { credentials: "same-origin" })
+      .then(function(r) { return r.text(); })
+      .then(function(html) {
+        if (html.indexOf("Order #") !== -1 || html.indexOf("No orders yet") !== -1) {
+          window.location.href = successUrl;
+        }
+      })
+      .catch(function() {});
+  }
+  setTimeout(poll, 2000);
+  setTimeout(poll, 5000);
+})();
+</script>
+{% endif %}
+{% endblock %}

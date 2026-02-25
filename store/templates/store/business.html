@@ -1,0 +1,165 @@
+{% extends "store/base.html" %}
+{% block title %}Business – {{ site_settings.site_name|default:"Artist Store" }}{% endblock %}
+{% block content %}
+<div class="min-h-screen" style="background: var(--theme-bg);">
+    <div class="container mx-auto py-8 px-4 max-w-4xl">
+        <h1 class="text-2xl font-bold mb-6" style="color: var(--theme-text);">Business</h1>
+        <p class="text-sm mb-6" style="color: var(--theme-text-muted);">Configure fulfillment mode and provider integrations. Changes apply to new orders only.</p>
+
+        {# Protect Your Art — informational only, no processing in-app #}
+        <section class="rounded-xl p-6 mb-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-lg font-semibold mb-3" style="color: var(--theme-text);">Protect Your Art (Recommended)</h2>
+            <p class="text-sm mb-3" style="color: var(--theme-text-muted);">Preprocess images before uploading to reduce AI style mimicry and unauthorized training risk. Use third-party tools on your own device — this app does not process images.</p>
+            <ul class="text-sm mb-4 space-y-1" style="color: var(--theme-text);">
+                <li>1. Export web-sized images (e.g., 1600–2400px longest edge)</li>
+                <li>2. Apply Glaze or WebGlaze to protect style</li>
+                <li>3. Optionally apply Nightshade</li>
+                <li>4. Upload protected images to your store</li>
+                <li>5. Keep originals private for printing</li>
+            </ul>
+            <div class="flex flex-wrap gap-3">
+                <a href="https://glaze.cs.uchicago.edu/" target="_blank" rel="noopener noreferrer" class="text-sm px-3 py-2 rounded-lg" style="background: var(--theme-accent); color: white;">Glaze (Official)</a>
+                <a href="https://glaze.cs.uchicago.edu/webglaze.html" target="_blank" rel="noopener noreferrer" class="text-sm px-3 py-2 rounded-lg" style="background: var(--theme-accent); color: white;">WebGlaze (Official)</a>
+                <a href="https://nightshade.cs.uchicago.edu/" target="_blank" rel="noopener noreferrer" class="text-sm px-3 py-2 rounded-lg" style="background: var(--theme-accent); color: white;">Nightshade (Official)</a>
+                <a href="{% url 'protect_your_art' %}" class="text-sm px-3 py-2 rounded-lg border" style="border-color: var(--theme-border); color: var(--theme-text);">Read the full guide</a>
+            </div>
+        </section>
+
+        {# Effective configuration summary #}
+        <section class="rounded-xl p-4 mb-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-sm font-semibold mb-2" style="color: var(--theme-text);">Effective configuration</h2>
+            <ul class="text-sm space-y-1" style="color: var(--theme-text-muted);">
+                <li>Mode: <strong style="color: var(--theme-text);">{{ effective_settings.fulfillment_mode }}</strong> {% if effective_settings.fulfillment_mode == "MANUAL" %}(Self-Fulfillment){% else %}(Print-on-Demand){% endif %}</li>
+                <li>Manual provider: <strong style="color: var(--theme-text);">{{ effective_settings.manual_provider|default:"none" }}</strong></li>
+                <li>POD provider: <strong style="color: var(--theme-text);">{{ effective_settings.pod_provider|default:"none" }}</strong></li>
+                <li>Secrets: {{ effective_settings.use_env_secrets|yesno:"env-only (recommended),db-local (not for production)" }}</li>
+            </ul>
+        </section>
+
+        {# Fulfillment mode toggle #}
+        <section class="rounded-xl p-6 mb-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Fulfillment mode</h2>
+            <form method="post" action="{% url 'business_settings_update' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="manual_provider" value="{{ effective_settings.manual_provider }}">
+                <input type="hidden" name="pod_provider" value="{{ effective_settings.pod_provider }}">
+                <div class="flex gap-6">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="fulfillment_mode" value="MANUAL" {% if effective_settings.fulfillment_mode == "MANUAL" %}checked{% endif %}>
+                        <span style="color: var(--theme-text);">Self-Fulfillment (artist ships)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="fulfillment_mode" value="POD" {% if effective_settings.fulfillment_mode == "POD" %}checked{% endif %}>
+                        <span style="color: var(--theme-text);">Print-on-Demand (outsourced)</span>
+                    </label>
+                </div>
+                <div class="flex gap-4 items-center">
+                    <input type="hidden" name="use_env_secrets" value="false">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="use_env_secrets" value="true" {% if effective_settings.use_env_secrets %}checked{% endif %}>
+                        <span class="text-sm" style="color: var(--theme-text);">Use env vars for API keys (recommended)</span>
+                    </label>
+                </div>
+                <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-accent); color: white;">Save</button>
+            </form>
+        </section>
+
+        {# Provider integrations - MANUAL #}
+        {% if effective_settings.fulfillment_mode == "MANUAL" %}
+        <section class="rounded-xl p-6 mb-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Manual fulfillment providers</h2>
+            <p class="text-sm mb-4" style="color: var(--theme-text-muted);">Choose a shipping provider for label creation when you ship orders yourself.</p>
+            <form method="post" action="{% url 'business_settings_update' %}" class="mb-4">
+                {% csrf_token %}
+                <input type="hidden" name="fulfillment_mode" value="MANUAL">
+                <input type="hidden" name="pod_provider" value="{{ effective_settings.pod_provider }}">
+                <input type="hidden" name="use_env_secrets" value="{% if effective_settings.use_env_secrets %}true{% else %}false{% endif %}">
+                <div class="flex gap-4 flex-wrap">
+                    <label class="flex items-center gap-2"><input type="radio" name="manual_provider" value="shippo" {% if effective_settings.manual_provider == "shippo" %}checked{% endif %}> Shippo</label>
+                    <label class="flex items-center gap-2"><input type="radio" name="manual_provider" value="easypost" {% if effective_settings.manual_provider == "easypost" %}checked{% endif %}> EasyPost</label>
+                    <label class="flex items-center gap-2"><input type="radio" name="manual_provider" value="none" {% if effective_settings.manual_provider == "none" %}checked{% endif %}> None</label>
+                </div>
+                <button type="submit" class="mt-2 px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-accent); color: white;">Save</button>
+            </form>
+            <div class="space-y-4">
+                {% include "store/components/organisms/business/integration_card.html" with provider="shippo" provider_label="Shippo" env_var="SHIPPO_API_TOKEN" description="Shippo provides shipping rates and labels for major carriers." provider_status=providers_info.shippo.status env_configured=providers_info.shippo.env_configured %}
+                {% include "store/components/organisms/business/integration_card.html" with provider="easypost" provider_label="EasyPost" env_var="EASYPOST_API_KEY" description="EasyPost consolidates carriers and simplifies label creation." provider_status=providers_info.easypost.status env_configured=providers_info.easypost.env_configured %}
+                {% include "store/components/organisms/business/integration_none_manual.html" %}
+            </div>
+        </section>
+        {% endif %}
+
+        {# Provider integrations - POD #}
+        {% if effective_settings.fulfillment_mode == "POD" %}
+        <section class="rounded-xl p-6 mb-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Print-on-demand providers</h2>
+            <p class="text-sm mb-4" style="color: var(--theme-text-muted);">Choose a POD provider for production and fulfillment.</p>
+            <form method="post" action="{% url 'business_settings_update' %}" class="mb-4">
+                {% csrf_token %}
+                <input type="hidden" name="fulfillment_mode" value="POD">
+                <input type="hidden" name="manual_provider" value="{{ effective_settings.manual_provider }}">
+                <input type="hidden" name="use_env_secrets" value="{% if effective_settings.use_env_secrets %}true{% else %}false{% endif %}">
+                <div class="flex gap-4 flex-wrap">
+                    <label class="flex items-center gap-2"><input type="radio" name="pod_provider" value="printful" {% if effective_settings.pod_provider == "printful" %}checked{% endif %}> Printful</label>
+                    <label class="flex items-center gap-2"><input type="radio" name="pod_provider" value="printify" {% if effective_settings.pod_provider == "printify" %}checked{% endif %}> Printify</label>
+                    <label class="flex items-center gap-2"><input type="radio" name="pod_provider" value="gelato" {% if effective_settings.pod_provider == "gelato" %}checked{% endif %}> Gelato</label>
+                    <label class="flex items-center gap-2"><input type="radio" name="pod_provider" value="none" {% if effective_settings.pod_provider == "none" %}checked{% endif %}> None</label>
+                </div>
+                <button type="submit" class="mt-2 px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-accent); color: white;">Save</button>
+            </form>
+            <div class="space-y-4">
+                {% include "store/components/organisms/business/integration_card.html" with provider="printful" provider_label="Printful" env_var="PRINTFUL_API_KEY" description="Printful handles print and fulfillment for apparel, posters, and more." provider_status=providers_info.printful.status env_configured=providers_info.printful.env_configured %}
+                {% include "store/components/organisms/business/integration_card.html" with provider="printify" provider_label="Printify" env_var="PRINTIFY_API_KEY" description="Printify connects you to print providers worldwide." provider_status=providers_info.printify.status env_configured=providers_info.printify.env_configured %}
+                {% include "store/components/organisms/business/integration_card.html" with provider="gelato" provider_label="Gelato" env_var="GELATO_API_KEY" description="Gelato offers global print and delivery." provider_status=providers_info.gelato.status env_configured=providers_info.gelato.env_configured %}
+                {% include "store/components/organisms/business/integration_none_pod.html" %}
+            </div>
+        </section>
+        {% endif %}
+
+        {# Webhooks #}
+        <section class="rounded-xl p-6 mb-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Webhooks</h2>
+            <p class="text-sm mb-2" style="color: var(--theme-text-muted);">Configure these URLs in your provider dashboards to receive order and payment events.</p>
+            <ul class="text-sm space-y-1 font-mono" style="color: var(--theme-text);">
+                <li><strong>Stripe:</strong> <code>{{ request.scheme }}://{{ request.get_host }}/webhooks/stripe/</code></li>
+                <li><strong>Fulfillment (provider):</strong> <code>{{ request.scheme }}://{{ request.get_host }}/webhooks/fulfillment/&lt;provider&gt;/</code></li>
+            </ul>
+        </section>
+
+        {# Order lifecycle reference #}
+        <section class="rounded-xl p-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Order lifecycle reference</h2>
+            <p class="text-sm mb-2" style="color: var(--theme-text-muted);">Status flow: DRAFT → PENDING_PAYMENT → PAID → FULFILLMENT_PENDING → (IN_PRODUCTION) → SHIPPED → DELIVERED</p>
+            <p class="text-xs" style="color: var(--theme-text-muted);">Refunds and cancellations apply where valid. Provider selection is determined by the admin configuration above.</p>
+        </section>
+    </div>
+</div>
+<script>
+(function() {
+  document.querySelectorAll('.provider-test-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var provider = btn.dataset.provider;
+      var form = btn.closest('form');
+      var token = form ? form.querySelector('input[name="csrfmiddlewaretoken"]') : document.querySelector('input[name="csrfmiddlewaretoken"]');
+      var fd = new FormData();
+      if (token) fd.append('csrfmiddlewaretoken', token.value);
+      btn.disabled = true;
+      btn.textContent = 'Testing…';
+      fetch('/business/provider/' + provider + '/test/', {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-CSRFToken': token ? token.value : '', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin'
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        alert(data.success ? 'Success: ' + data.message : 'Failed: ' + data.message);
+      }).catch(function() {
+        alert('Test request failed');
+      }).finally(function() {
+        btn.disabled = false;
+        btn.textContent = 'Test connection';
+      });
+    });
+  });
+})();
+</script>
+{% endblock %}

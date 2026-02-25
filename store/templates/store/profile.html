@@ -1,0 +1,195 @@
+{% extends "store/base.html" %}
+{% block title %}Profile – {{ site_settings.site_name|default:"Artist Store" }}{% endblock %}
+{% block content %}
+<div class="min-h-screen" style="background: var(--theme-bg);">
+    <div class="container mx-auto py-8 px-4 max-w-6xl">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold" style="color: var(--theme-text);">Profile Dashboard</h1>
+            {% include "store/components/molecules/theme_switcher.html" %}
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-2">
+            {# Orders graph - 1 month & 6 months #}
+            <section class="rounded-xl p-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+                <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Orders Over Time</h2>
+                <p class="text-sm mb-4" style="color: var(--theme-text-muted);">Last 6 months</p>
+                <div class="h-64">
+                    <canvas id="ordersChart"></canvas>
+                </div>
+            </section>
+
+            {# Popular tags bar graph #}
+            <section class="rounded-xl p-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+                <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Popular Tags (Trends)</h2>
+                <div class="h-64">
+                    <canvas id="tagsChart"></canvas>
+                </div>
+            </section>
+        </div>
+
+        {# Orders list #}
+        <section class="rounded-xl p-6 mt-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Recent Orders</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b" style="border-color: var(--theme-border);">
+                            <th class="text-left py-2" style="color: var(--theme-text-muted);">Order #</th>
+                            <th class="text-left py-2" style="color: var(--theme-text-muted);">Date</th>
+                            <th class="text-left py-2" style="color: var(--theme-text-muted);">User</th>
+                            <th class="text-right py-2" style="color: var(--theme-text-muted);">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr class="border-b" style="border-color: var(--theme-border);">
+                            <td class="py-2" style="color: var(--theme-text);">{{ order.id }}</td>
+                            <td class="py-2" style="color: var(--theme-text);">{{ order.created_at|date:"M d, Y" }}</td>
+                            <td class="py-2" style="color: var(--theme-text);">{{ order.user.email|default:order.user.username|default:"—" }}</td>
+                            <td class="py-2 text-right" style="color: var(--theme-accent);">${{ order.total }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="py-4 text-center" style="color: var(--theme-text-muted);">No orders yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        {# Users joined #}
+        <section class="rounded-xl p-6 mt-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+            <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Users Joined</h2>
+            <div class="overflow-x-auto max-h-48 overflow-y-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b" style="border-color: var(--theme-border);">
+                            <th class="text-left py-2" style="color: var(--theme-text-muted);">Username</th>
+                            <th class="text-left py-2" style="color: var(--theme-text-muted);">Email</th>
+                            <th class="text-left py-2" style="color: var(--theme-text-muted);">Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in store_users %}
+                        <tr class="border-b" style="border-color: var(--theme-border);">
+                            <td class="py-2" style="color: var(--theme-text);">{{ u.username }}</td>
+                            <td class="py-2" style="color: var(--theme-text);">{{ u.email|default:"—" }}</td>
+                            <td class="py-2" style="color: var(--theme-text-muted);">{{ u.date_joined|date:"M d, Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="py-4 text-center" style="color: var(--theme-text-muted);">No users yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <div class="grid gap-6 mt-6 md:grid-cols-2">
+            {# Substack integration - same layout for admin and guest; admin can edit #}
+            <section class="rounded-xl p-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+                <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Substack Integration</h2>
+                <p class="text-sm mb-4" style="color: var(--theme-text-muted);">Connect your Substack publication to display blog posts on the <a href="{% url 'blog' %}" class="underline" style="color: var(--theme-accent);">Blog</a> page.</p>
+                <form method="post" action="{% url 'profile_substack_settings' %}" class="mb-6">
+                    {% csrf_token %}
+                    <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Publication URL</label>
+                    <input type="url" name="substack_publication_url" value="{{ site_settings.substack_publication_url|default:'' }}" placeholder="https://yourname.substack.com" class="w-full px-3 py-2 rounded-lg border text-sm mb-3" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);" {% if not is_admin %}readonly{% endif %}>
+                    <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-accent); color: white;" {% if not is_admin %}disabled{% endif %}>Save Substack URL</button>
+                    {% if not is_admin %}<p class="text-xs mt-1" style="color: var(--theme-text-muted);">Admin only to edit</p>{% endif %}
+                </form>
+                <hr class="my-4" style="border-color: var(--theme-border);">
+                <h3 class="text-base font-medium mb-2" style="color: var(--theme-text);">Newsletter (Deploy to Substack)</h3>
+                <p class="text-sm mb-3" style="color: var(--theme-text-muted);">Compose a message in Markdown to deploy to Substack. Requires Substack API setup.</p>
+                <form method="post" action="{% url 'profile_substack_post' %}">
+                    {% csrf_token %}
+                    <textarea name="content" rows="8" placeholder="Write your newsletter content in Markdown..." class="w-full px-3 py-2 rounded-lg border text-sm font-mono resize-y mb-3" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);" {% if not is_admin %}readonly{% endif %}></textarea>
+                    <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-accent); color: white;" {% if not is_admin %}disabled{% endif %}>Deploy to Substack</button>
+                </form>
+            </section>
+
+            {# Send email - same layout for admin and guest; admin can send #}
+            <section class="rounded-xl p-6" style="background: var(--theme-bg-card); border: 1px solid var(--theme-border);">
+                <h2 class="text-lg font-semibold mb-4" style="color: var(--theme-text);">Send Custom Email</h2>
+                <form method="post" action="{% url 'profile_send_email' %}">
+                    {% csrf_token %}
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">To (email)</label>
+                            <input type="email" name="to_email" required placeholder="customer@example.com" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);" {% if not is_admin %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Subject</label>
+                            <input type="text" name="subject" value="Thank you for your purchase!" class="w-full px-3 py-2 rounded-lg border text-sm" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);" {% if not is_admin %}readonly{% endif %}>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1" style="color: var(--theme-text);">Message</label>
+                            <textarea name="body" rows="6" class="w-full px-3 py-2 rounded-lg border text-sm resize-y" style="background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text);" placeholder="Thank you for your purchase! Your order will arrive digitally within 24 hours, or physically within 5-7 business days." {% if not is_admin %}readonly{% endif %}>Thank you for your purchase! We appreciate your support.
+
+Your order will arrive digitally within 24 hours, or physically within 5-7 business days depending on your location.
+
+Best regards,
+The Artist Store Team</textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="mt-4 px-4 py-2 rounded-lg text-sm font-medium" style="background: var(--theme-accent); color: white;" {% if not is_admin %}disabled{% endif %}>Send Email</button>
+                    {% if not is_admin %}<p class="text-xs mt-2" style="color: var(--theme-text-muted);">Admin only to send</p>{% endif %}
+                </form>
+            </section>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+(function() {
+  var theme = getComputedStyle(document.documentElement).getPropertyValue('--theme-accent').trim() || '#c4a77d';
+  var text = getComputedStyle(document.documentElement).getPropertyValue('--theme-text').trim() || '#3d3730';
+  var muted = getComputedStyle(document.documentElement).getPropertyValue('--theme-text-muted').trim() || '#6b6359';
+
+  new Chart(document.getElementById('ordersChart'), {
+    type: 'line',
+    data: {
+      labels: {{ chart_labels|safe }},
+      datasets: [{
+        label: 'Orders',
+        data: {{ chart_data|safe }},
+        borderColor: theme,
+        backgroundColor: theme + '20',
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { color: muted } },
+        x: { ticks: { color: muted } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('tagsChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ popular_tags_labels|safe }},
+      datasets: [{
+        label: 'Count',
+        data: {{ popular_tags_data|safe }},
+        backgroundColor: theme,
+        borderColor: theme,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, ticks: { color: muted } },
+        y: { ticks: { color: muted } }
+      }
+    }
+  });
+})();
+</script>
+{% endblock %}
