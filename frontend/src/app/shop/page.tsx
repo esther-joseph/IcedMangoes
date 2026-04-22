@@ -4,6 +4,10 @@ import { ProductGrid } from "@/components/organisms/ProductGrid";
 import { ShopSearch } from "@/components/molecules/ShopSearch";
 import { EmptyState } from "@/components/molecules/EmptyState";
 import { Pagination } from "@/components/molecules/Pagination";
+import {
+  DEMO_PRODUCTS,
+  filterDemoProducts,
+} from "@/lib/demo-products";
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -15,61 +19,95 @@ async function ShopContent({
   page?: number;
 }) {
   const supabase = await getSupabaseClient();
-  const pageNum = Math.max(1, Number(page) || 1);
-  const offset = (pageNum - 1) * PRODUCTS_PER_PAGE;
-
-  if (!supabase) {
-    return (
-      <div className="rounded-xl border border-dashed border-[var(--border)] px-8 py-16 text-center text-[var(--muted)]">
-        Configure Supabase in .env.local to view products.
-      </div>
-    );
-  }
-
-  let query = supabase
-    .from("products")
-    .select("id, title, description, price, image_url", { count: "exact" })
-    .eq("active", true)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + PRODUCTS_PER_PAGE - 1);
-
-  if (search?.trim()) {
-    const term = search.trim().replace(/%|'/g, "");
-    if (term) {
-      query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
-    }
-  }
-
-  const { data: products, count, error } = await query;
-
-  if (error) {
-    return (
-      <div className="rounded-xl border border-red-200 bg-red-50 px-8 py-16 text-center text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
-        Error loading products.
-      </div>
-    );
-  }
-
-  const totalPages = count ? Math.ceil(count / PRODUCTS_PER_PAGE) : 0;
+  let pageNum = Math.max(1, Number(page) || 1);
+  let offset = (pageNum - 1) * PRODUCTS_PER_PAGE;
+  const hasSearch = Boolean(search?.trim());
 
   const searchParams: Record<string, string> = {};
   if (search) searchParams.search = search;
 
+  let useDemo = false;
+  let products: {
+    id: string;
+    title: string;
+    description: string;
+    price: number;
+    image_url: string | null;
+  }[] = [];
+  let totalCount = 0;
+
+  if (supabase) {
+    let query = supabase
+      .from("products")
+      .select("id, title, description, price, image_url", { count: "exact" })
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + PRODUCTS_PER_PAGE - 1);
+
+    if (search?.trim()) {
+      const term = search.trim().replace(/%|'/g, "");
+      if (term) {
+        query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+      }
+    }
+
+    const { data, count, error } = await query;
+
+    if (error || !data) {
+      useDemo = true;
+    } else if (data.length === 0 && !hasSearch) {
+      useDemo = true;
+    } else {
+      products = data;
+      totalCount = count ?? data.length;
+    }
+  } else {
+    useDemo = true;
+  }
+
+  if (useDemo) {
+    const filtered = filterDemoProducts(DEMO_PRODUCTS, search);
+    totalCount = filtered.length;
+    const demoTotalPages = Math.max(
+      1,
+      Math.ceil(filtered.length / PRODUCTS_PER_PAGE)
+    );
+    pageNum = Math.min(pageNum, demoTotalPages);
+    offset = (pageNum - 1) * PRODUCTS_PER_PAGE;
+    products = filtered
+      .slice(offset, offset + PRODUCTS_PER_PAGE)
+      .map((p) => ({ ...p, image_url: p.image_url }));
+  }
+
+  const totalPages =
+    totalCount > 0 ? Math.max(1, Math.ceil(totalCount / PRODUCTS_PER_PAGE)) : 1;
+
+  if (products.length === 0 && hasSearch) {
+    return (
+      <div className="space-y-8">
+        <EmptyState title="No products found." />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      {products?.length === 0 ? (
-        <EmptyState title="No products found." />
-      ) : (
-        <>
-          <ProductGrid products={products ?? []} />
-          <Pagination
-            currentPage={pageNum}
-            totalPages={totalPages}
-            basePath="/shop"
-            searchParams={searchParams}
-          />
-        </>
+      {useDemo && (
+        <p
+          className="text-center text-sm"
+          style={{ color: "var(--theme-text-muted)" }}
+        >
+          Sample catalog for preview. Configure Supabase with real products to
+          replace these listings.
+        </p>
       )}
+      <ProductGrid products={products} />
+      <Pagination
+        currentPage={pageNum}
+        totalPages={totalPages}
+        basePath="/shop"
+        searchParams={searchParams}
+      />
     </div>
   );
 }

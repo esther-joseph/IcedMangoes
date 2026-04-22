@@ -15,6 +15,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Demo catalog (no Supabase required)
+
+If Supabase is not configured, the query fails, or the `products` table is empty, the app serves a built-in demo catalog (eight public-domain artworks as JPEGs under `public/demo-art/`). Product IDs look like `demo-starry-night`. This removes empty-state and configuration errors on Vercel previews. Add real rows in Supabase to replace the demo.
+
 ## Build
 
 ```bash
