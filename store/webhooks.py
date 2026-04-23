@@ -3,9 +3,9 @@ import hashlib
 import logging
 
 from django.conf import settings
-from django.db import transaction
+from django.db import IntegrityError, transaction
 
-from .models import Artwork, Order, OrderItem
+from .models import Artwork, Order, OrderItem, WebhookEvent
 
 logger = logging.getLogger(__name__)
 
@@ -33,23 +33,31 @@ def build_cart_signature(cart_items: list) -> str:
     return "|".join(f"{aid}:{q}" for aid, q in parts)
 
 
-def handle_checkout_session_completed(session) -> Order | None:
+def handle_checkout_session_completed(session, stripe_event_id: str) -> Order | None:
     """
-    Create order from Stripe checkout session. Idempotent: if order with
-    this stripe_session_id already exists, return it and do nothing.
+    Create order from Stripe checkout session. Fully idempotent: uses WebhookEvent
+    with a unique constraint on stripe_event_id to guarantee at-most-once processing
+    even under concurrent duplicate webhook delivery.
     """
     stripe_session_id = session.get("id")
     if not stripe_session_id:
         logger.warning("checkout.session.completed missing session id")
         return None
 
-    # Idempotency: already processed
-    existing = Order.objects.filter(stripe_session_id=stripe_session_id).first()
-    if existing:
-        logger.info("Order already exists for session %s, skipping", stripe_session_id)
-        return existing
+    # Attempt to record this event. If another request already inserted it,
+    # IntegrityError is raised and we return the existing order without doing any work.
+    try:
+        with transaction.atomic():
+            event_record = WebhookEvent.objects.create(
+                stripe_event_id=stripe_event_id,
+                event_type="checkout.session.completed",
+            )
+    except IntegrityError:
+        logger.info("Duplicate Stripe event %s — already processed, skipping", stripe_event_id)
+        existing = WebhookEvent.objects.filter(stripe_event_id=stripe_event_id).first()
+        return existing.order if existing else None
 
-    # Fetch full session with expanded line items (webhook payload may not include them)
+    # Fetch full session with expanded line items
     import stripe
 
     stripe_key = _get_stripe_key()
@@ -74,13 +82,14 @@ def handle_checkout_session_completed(session) -> Order | None:
     amount_total = (full_session.get("amount_total") or 0) / 100
     client_reference_id = full_session.get("client_reference_id") or ""
 
-    # Parse user_id from client_reference_id (we pass "user:<id>" or "anon")
     user_id = None
     if client_reference_id.startswith("user:"):
         try:
             user_id = int(client_reference_id.replace("user:", ""))
         except ValueError:
             pass
+
+    shipping = _extract_shipping(full_session)
 
     from .order_service import request_fulfillment
 
@@ -91,15 +100,36 @@ def handle_checkout_session_completed(session) -> Order | None:
             total=amount_total,
             payment_method="card",
             status="PAID",
+            **shipping,
         )
         for line in line_items_data:
             _create_order_item_from_line(order, line)
 
+        # Link the webhook event record to this order
+        event_record.order = order
+        event_record.save(update_fields=["order"])
+
     result = request_fulfillment(order)
     if not result.get("success"):
-        logger.warning("Fulfillment request for order %s: %s", order.id, result.get("message", ""))
+        logger.warning("Fulfillment for order %s: %s", order.id, result.get("message", ""))
     logger.info("Created order %s for Stripe session %s", order.id, stripe_session_id)
     return order
+
+
+def _extract_shipping(session) -> dict:
+    """Extract shipping address from a Stripe session into Order field kwargs."""
+    details = session.get("shipping_details") or session.get("shipping") or {}
+    address = details.get("address") or {}
+    return {
+        "shipping_name": details.get("name") or "",
+        "shipping_email": session.get("customer_details", {}).get("email") or "",
+        "shipping_address_line1": address.get("line1") or "",
+        "shipping_address_line2": address.get("line2") or "",
+        "shipping_city": address.get("city") or "",
+        "shipping_state": address.get("state") or "",
+        "shipping_postal_code": address.get("postal_code") or "",
+        "shipping_country": (address.get("country") or "")[:2],
+    }
 
 
 def _create_order_item_from_line(order: Order, line: dict) -> OrderItem | None:
@@ -107,12 +137,8 @@ def _create_order_item_from_line(order: Order, line: dict) -> OrderItem | None:
     qty = line.get("quantity", 1)
     amount = (line.get("amount_total") or 0) / 100
     price = (line.get("price", {}) or {}).get("unit_amount")
-    if price is not None:
-        unit_price = price / 100
-    else:
-        unit_price = amount / qty if qty else 0
+    unit_price = (price / 100) if price is not None else (amount / qty if qty else 0)
 
-    # Prefer artwork_id from product metadata (we set this in checkout_create)
     product = line.get("price", {}).get("product") or line.get("product") or {}
     if isinstance(product, str):
         product = {}
@@ -131,7 +157,6 @@ def _create_order_item_from_line(order: Order, line: dict) -> OrderItem | None:
             logger.warning("Artwork %s not found for line item", artwork_id)
             return None
     else:
-        # Fallback: match by product name (less reliable)
         name = (product.get("name") or "").strip()
         if not name:
             return None
@@ -150,6 +175,5 @@ def _get_stripe_key() -> str:
 
     site = SiteSettings.get()
     return (
-        (site.stripe_secret_key or getattr(settings, "STRIPE_SECRET_KEY", "") or "")
-        .strip()
+        (site.stripe_secret_key or getattr(settings, "STRIPE_SECRET_KEY", "") or "").strip()
     )

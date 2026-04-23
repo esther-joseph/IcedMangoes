@@ -60,6 +60,11 @@ class ArtworkProduct(models.Model):
     artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    provider_variant_ids = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Map of provider → variant ID: {"printful": "123", "printify": "abc", "gelato": "xyz"}',
+    )
 
     class Meta:
         ordering = ["id"]
@@ -89,13 +94,18 @@ class Order(models.Model):
     stripe_session_id = models.CharField(max_length=255, blank=True)
     payment_method = models.CharField(max_length=50, default="card")
     total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0"))
-    status = models.CharField(
-        max_length=30,
-        choices=STATUS_CHOICES,
-        default="PENDING_PAYMENT",
-    )
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default="PENDING_PAYMENT")
     fulfilling_provider = models.CharField(max_length=50, blank=True)
     tracking_number = models.CharField(max_length=255, blank=True)
+    # Shipping address — populated from Stripe session on checkout.session.completed
+    shipping_name = models.CharField(max_length=255, blank=True)
+    shipping_email = models.EmailField(blank=True)
+    shipping_address_line1 = models.CharField(max_length=255, blank=True)
+    shipping_address_line2 = models.CharField(max_length=255, blank=True)
+    shipping_city = models.CharField(max_length=100, blank=True)
+    shipping_state = models.CharField(max_length=100, blank=True)
+    shipping_postal_code = models.CharField(max_length=20, blank=True)
+    shipping_country = models.CharField(max_length=2, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -119,20 +129,31 @@ class OrderItem(models.Model):
 
 
 class SiteSettings(models.Model):
-    """Singleton settings for theme, Stripe, and creative visuals (admin configurable)."""
+    """Singleton settings for theme, Stripe, and store configuration (admin configurable)."""
 
     default_theme = models.CharField(
-        max_length=50, default="cute-beige",
-        help_text="Default theme: cute-beige, lavender, baby-blue, peach-pink, slate-gray, mint-green, coral-red"
+        max_length=50,
+        default="cute-beige",
+        help_text="Default theme: cute-beige, lavender, baby-blue, peach-pink, slate-gray, mint-green, coral-red",
     )
     site_name = models.CharField(max_length=100, default="Artist Store")
     tagline = models.CharField(max_length=200, default="Discover and collect artworks")
     stripe_publishable_key = models.CharField(max_length=255, blank=True)
     stripe_secret_key = models.CharField(max_length=255, blank=True)
     substack_publication_url = models.CharField(
-        max_length=255, blank=True,
-        help_text="Substack publication URL (e.g. https://yourname.substack.com) for blog feed"
+        max_length=255,
+        blank=True,
+        help_text="Substack publication URL (e.g. https://yourname.substack.com) for blog feed",
     )
+    # Seller address — used as "from" address for Shippo / EasyPost shipments
+    seller_name = models.CharField(max_length=255, blank=True)
+    seller_address_line1 = models.CharField(max_length=255, blank=True)
+    seller_city = models.CharField(max_length=100, blank=True)
+    seller_state = models.CharField(max_length=100, blank=True)
+    seller_postal_code = models.CharField(max_length=20, blank=True)
+    seller_country = models.CharField(max_length=2, blank=True, default="US")
+    # Printify requires a shop ID (found in your Printify dashboard)
+    printify_shop_id = models.CharField(max_length=100, blank=True)
 
     class Meta:
         verbose_name_plural = "Site settings"
@@ -161,7 +182,12 @@ class FulfillmentSettings(models.Model):
     )
     pod_provider = models.CharField(
         max_length=20,
-        choices=[("printful", "Printful"), ("printify", "Printify"), ("gelato", "Gelato"), ("none", "None")],
+        choices=[
+            ("printful", "Printful"),
+            ("printify", "Printify"),
+            ("gelato", "Gelato"),
+            ("none", "None"),
+        ],
         default="none",
     )
     use_env_secrets = models.BooleanField(
@@ -197,3 +223,50 @@ class ProviderSecret(models.Model):
     class Meta:
         verbose_name = "Provider secret"
         verbose_name_plural = "Provider secrets"
+
+
+class WebhookEvent(models.Model):
+    """Tracks processed Stripe events to guarantee idempotent webhook handling.
+
+    The unique constraint on stripe_event_id means a concurrent duplicate delivery
+    will raise IntegrityError on the second insert, which the handler catches and
+    ignores rather than creating a duplicate order.
+    """
+
+    stripe_event_id = models.CharField(max_length=255, unique=True)
+    event_type = models.CharField(max_length=100)
+    processed_at = models.DateTimeField(auto_now_add=True)
+    order = models.ForeignKey(Order, null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ["-processed_at"]
+
+    def __str__(self) -> str:
+        return f"{self.event_type} — {self.stripe_event_id}"
+
+
+class Cart(models.Model):
+    """Persistent cart for authenticated users. Anonymous users use the session cart."""
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return f"Cart for {self.user}"
+
+
+class CartItem(models.Model):
+    """Line item in a persistent cart."""
+
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
+    artwork = models.ForeignKey(Artwork, on_delete=models.CASCADE)
+    product = models.ForeignKey(
+        ArtworkProduct, null=True, blank=True, on_delete=models.SET_NULL
+    )
+    quantity = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        unique_together = ("cart", "artwork", "product")
+
+    def __str__(self) -> str:
+        return f"{self.artwork.title} x {self.quantity}"

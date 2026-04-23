@@ -575,6 +575,6 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse:
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-        handle_checkout_session_completed(session)
+        handle_checkout_session_completed(session, stripe_event_id=event["id"])
 
     return HttpResponse(status=200)

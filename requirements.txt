@@ -7,3 +7,5 @@ stripe
 django-storages[s3]
 boto3
 gunicorn
+djangorestframework>=3.14
+django-cors-headers>=4.0
