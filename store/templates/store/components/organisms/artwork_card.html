@@ -1,7 +1,7 @@
 {% load static %}
-{# Artwork card - click opens detail modal; data attributes used by modal script #}
-<article class="artwork-card group break-inside-avoid mb-4 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-  style="background: var(--theme-bg-card); box-shadow: 0 4px 6px -1px var(--theme-shadow), 0 2px 4px -2px var(--theme-shadow);"
+{# Organism: Artwork card — click opens detail modal #}
+<article
+  class="artwork-card artwork-grid-item"
   data-artwork-id="{{ art.id }}"
   data-title="{{ art.title|escapejs }}"
   data-description="{{ art.description|escapejs }}"
@@ -11,25 +11,40 @@
   data-price="{{ art.price }}"
   data-products="[{% for p in art.artworkproduct_set.all %}{&quot;id&quot;:{{ p.id }},&quot;name&quot;:&quot;{{ p.name|escapejs }}&quot;,&quot;price&quot;:&quot;{{ p.price }}&quot;}{% if not forloop.last %},{% endif %}{% endfor %}]"
 >
-  <div class="block">
     {% if art.image %}
-      <div class="relative overflow-hidden">
-        <img src="{{ art.image.url }}" alt="{{ art.title }}" class="w-full object-cover transition-transform duration-300 group-hover:scale-105">
-      </div>
+        <div class="artwork-card-img-wrap">
+            <img
+                src="{{ art.image.url }}"
+                alt="{{ art.title }}"
+                class="artwork-card-img"
+                loading="lazy"
+            >
+        </div>
     {% else %}
-      <div class="aspect-square flex items-center justify-center" style="background: var(--theme-border);">
-        <span class="text-sm" style="color: var(--theme-text-muted);">No image</span>
-      </div>
+        <div class="artwork-card-placeholder">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" style="color: var(--theme-text-muted); opacity: 0.3;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
     {% endif %}
-    <div class="p-4">
-      <h3 class="font-semibold line-clamp-2" style="color: var(--theme-text);">{{ art.title }}</h3>
-      <p class="mt-1 text-sm" style="color: var(--theme-text-muted);">{{ art.artist.name }}</p>
-      <p class="mt-2 text-sm line-clamp-2" style="color: var(--theme-text); opacity: 0.9;">{{ art.description }}</p>
-      {% if art.tags %}<p class="mt-1 text-xs" style="color: var(--theme-text-muted);">{{ art.tags }}</p>{% endif %}
-      <div class="mt-2 flex items-center justify-between gap-2">
-        <span class="font-semibold" style="color: var(--theme-accent);">From ${{ art.price }}</span>
-        <span class="text-xs" style="color: var(--theme-text-muted);">View details →</span>
-      </div>
+
+    <div class="artwork-card-body">
+        <h3 class="artwork-card-title line-clamp-2">{{ art.title }}</h3>
+        <p class="artwork-card-artist">{{ art.artist.name }}</p>
+
+        {% if art.description %}
+            <p class="artwork-card-desc">{{ art.description }}</p>
+        {% endif %}
+
+        {% if art.tags %}
+            <div class="artwork-card-tags">
+                {% for tag in art.tags|slice:":3" %}
+                    <span class="tag-pill">{{ tag|strip }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="artwork-card-footer">
+            <span class="artwork-card-price">From ${{ art.price }}</span>
+            <span class="artwork-card-cta">View →</span>
+        </div>
     </div>
-  </div>
 </article>

@@ -4,17 +4,39 @@
 
 {% block content %}
 <div class="min-h-screen" style="background: var(--theme-bg);">
-    <div class="container mx-auto py-8 px-4">
-        <p class="text-sm mb-4" style="color: var(--theme-text-muted);">{{ site_settings.tagline|default:"Discover and collect artworks" }}</p>
-        {% if artworks %}
-            {% include "store/components/organisms/pinterest_board.html" with artworks=artworks %}
-            {% include "store/components/organisms/artwork_detail_modal.html" %}
-        {% else %}
-            <div class="flex flex-col items-center justify-center py-24 px-4">
-                <p class="text-center" style="color: var(--theme-text-muted);">No artworks available at this time.</p>
-            </div>
+
+    {# ── Hero ── #}
+    <div class="page-hero">
+        <p class="page-hero-eyebrow">Original works</p>
+        <h1 class="page-hero-title">
+            {% if site_settings.site_name %}
+                {{ site_settings.site_name }}
+            {% else %}
+                Artist <em>Store</em>
+            {% endif %}
+        </h1>
+        {% if site_settings.tagline %}
+            <p class="page-hero-sub">{{ site_settings.tagline }}</p>
         {% endif %}
     </div>
+
+    {# ── Grid ── #}
+    {% if artworks %}
+        {% include "store/components/organisms/pinterest_board.html" with artworks=artworks %}
+        {% include "store/components/organisms/artwork_detail_modal.html" %}
+    {% else %}
+        <div class="empty-state">
+            <svg class="empty-state-icon" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <p class="empty-state-title">Nothing here yet</p>
+            <p class="empty-state-desc">Artworks will appear here once they're added.</p>
+            {% if show_add_artwork %}
+                <button type="button" class="btn-primary mt-6" onclick="document.getElementById('add-artwork-modal')?.classList.remove('hidden')">
+                    Add your first artwork
+                </button>
+            {% endif %}
+        </div>
+    {% endif %}
+
     {% if show_add_artwork %}
         {% include "store/components/organisms/add_artwork_modal.html" %}
     {% endif %}
