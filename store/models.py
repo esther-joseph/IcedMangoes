@@ -182,7 +182,11 @@ class FulfillmentSettings(models.Model):
 class ProviderSecret(models.Model):
     """
     Stores provider API keys for local demos when use_env_secrets=False.
-    NOT recommended for production. Keys stored in plaintext; use encryption if handling real secrets.
+
+    WARNING: Keys are stored in plaintext. Do NOT use in production with real
+    API keys. For production, set use_env_secrets=True and supply keys via
+    environment variables, or encrypt this field using django-cryptography
+    (EncryptedCharField) and run a migration before storing real secrets.
     """
 
     provider_name = models.CharField(max_length=50, unique=True)

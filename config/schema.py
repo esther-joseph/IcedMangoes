@@ -2,7 +2,7 @@
 import graphene
 from graphene_django import DjangoObjectType
 
-from store.models import Artist, Artwork
+from store.models import Artist, Artwork, ArtworkImage, ArtworkProduct
 
 
 class ArtistType(DjangoObjectType):
@@ -13,12 +13,37 @@ class ArtistType(DjangoObjectType):
         fields = ("id", "name")
 
 
+class ArtworkImageType(DjangoObjectType):
+    """GraphQL type for ArtworkImage."""
+
+    class Meta:
+        model = ArtworkImage
+        fields = ("id", "image", "order")
+
+
+class ArtworkProductType(DjangoObjectType):
+    """GraphQL type for ArtworkProduct."""
+
+    class Meta:
+        model = ArtworkProduct
+        fields = ("id", "name", "price")
+
+
 class ArtworkType(DjangoObjectType):
     """GraphQL type for Artwork."""
+
+    images = graphene.List(ArtworkImageType)
+    products = graphene.List(ArtworkProductType)
 
     class Meta:
         model = Artwork
         fields = ("id", "title", "description", "price", "image", "tags", "available", "artist")
+
+    def resolve_images(self, info):
+        return self.artworkimage_set.all()
+
+    def resolve_products(self, info):
+        return self.artworkproduct_set.all()
 
 
 class CreateArtwork(graphene.Mutation):
@@ -68,6 +93,8 @@ class Query(graphene.ObjectType):
     artist = graphene.Field(ArtistType, id=graphene.Int())
     artworks = graphene.List(ArtworkType, available=graphene.Boolean())
     artwork = graphene.Field(ArtworkType, id=graphene.Int())
+    artwork_products = graphene.List(ArtworkProductType, artwork_id=graphene.Int(required=True))
+    artwork_images = graphene.List(ArtworkImageType, artwork_id=graphene.Int(required=True))
 
     def resolve_artists(self, info):
         return Artist.objects.all()
@@ -87,6 +114,12 @@ class Query(graphene.ObjectType):
         if id is None:
             return None
         return Artwork.objects.select_related("artist").filter(id=id).first()
+
+    def resolve_artwork_products(self, info, artwork_id):
+        return ArtworkProduct.objects.filter(artwork_id=artwork_id)
+
+    def resolve_artwork_images(self, info, artwork_id):
+        return ArtworkImage.objects.filter(artwork_id=artwork_id)
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

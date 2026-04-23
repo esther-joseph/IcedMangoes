@@ -1,7 +1,11 @@
-"""Optional Prisma client for type-safe queries.
+"""Optional Prisma client — scaffolding only, not wired up anywhere.
 
-Use when USE_SQLITE=1 and DATABASE_URL is set (e.g. file:./db.sqlite3).
-Run: prisma generate
+Prisma's Python client is async-only; it requires prisma.connect() before
+use and an async runtime. This does not fit the synchronous Django request
+cycle, so prefer Django's ORM for all current queries.
+
+To use: set USE_SQLITE=1, run `prisma generate`, then call get_prisma() and
+await prisma.connect() inside an async context.
 """
 import os
 

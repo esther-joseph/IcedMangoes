@@ -1,4 +1,5 @@
 """Substack RSS feed fetching and parsing."""
+import logging
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
@@ -8,6 +9,8 @@ from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -51,7 +54,8 @@ def fetch_substack_feed(publication_url: str, timeout: int = 10) -> list[Substac
     try:
         with urlopen(req, timeout=timeout) as resp:
             tree = ET.parse(resp)
-    except Exception:
+    except Exception as exc:
+        logger.warning("Failed to fetch Substack feed from %s: %s", url, exc)
         return []
 
     root = tree.getroot()
