@@ -10,6 +10,7 @@
   data-extra-images="[{% for img in art.artworkimage_set.all %}{&quot;url&quot;:&quot;{{ img.image.url }}&quot;,&quot;label&quot;:&quot;&quot;}{% if not forloop.last %},{% endif %}{% endfor %}]"
   data-price="{{ art.price }}"
   data-products="[{% for p in art.artworkproduct_set.all %}{&quot;id&quot;:{{ p.id }},&quot;name&quot;:&quot;{{ p.name|escapejs }}&quot;,&quot;price&quot;:&quot;{{ p.price }}&quot;}{% if not forloop.last %},{% endif %}{% endfor %}]"
+  data-tags="{{ art.tags|join:',' }}"
 >
     {% if art.image %}
         <div class="artwork-card-img-wrap">
@@ -47,4 +48,5 @@
             <span class="artwork-card-cta">View →</span>
         </div>
     </div>
+    <button type="button" class="quick-view-btn" aria-label="Quick view {{ art.title }}">Quick view</button>
 </article>
